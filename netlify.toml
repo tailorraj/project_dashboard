@@ -1,0 +1,18 @@
+[build]
+  publish = "public"
+  functions = "netlify/functions"
+  command = "echo 'no build step needed'"
+
+[functions]
+  node_bundler = "esbuild"
+
+[[redirects]]
+  from = "/api/progress"
+  to = "/.netlify/functions/get-progress-data"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"

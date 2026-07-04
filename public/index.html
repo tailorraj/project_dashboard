@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pioneer ERP Implementation — Progress Overview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #F4F7FB;
+    --paper-line: rgba(29, 78, 216, 0.05);
+    --card: #FFFFFF;
+    --border: #E3E9F1;
+    --border-soft: #EDF1F7;
+    --navy: #0F2A4A;
+    --blue: #1D4ED8;
+    --blue-soft: #EAF0FE;
+    --teal: #0891B2;
+    --teal-soft: #E6F6F9;
+    --text: #172033;
+    --text-muted: #64748B;
+    --text-faint: #9AA6B8;
+    --green: #15803D;
+    --green-soft: #E9F7EF;
+    --amber: #B45309;
+    --amber-soft: #FDF2E3;
+    --slate: #94A3B8;
+    --slate-soft: #F1F4F8;
+    --red: #B91C1C;
+    --red-soft: #FCEBEB;
+    --radius: 12px;
+  }
+
+  *{ box-sizing: border-box; }
+
+  body{
+    margin:0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    padding: 40px 32px 80px;
+  }
+
+  .wrap{ max-width: 1240px; margin: 0 auto; }
+
+  .topbar{
+    display:flex; justify-content: space-between; align-items: flex-start;
+    margin-bottom: 28px; gap: 24px; flex-wrap: wrap;
+  }
+  .eyebrow{
+    font-family: 'JetBrains Mono', monospace; font-size: 11.5px; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--blue); font-weight: 500; margin-bottom: 8px;
+    display:flex; align-items:center; gap:8px;
+  }
+  .eyebrow::before{ content:""; width:6px; height:6px; background: var(--blue); display:inline-block; border-radius: 1px; transform: rotate(45deg); }
+  h1{ font-family:'Manrope', sans-serif; font-weight:800; font-size: 30px; letter-spacing: -0.02em; margin: 0 0 6px; color: var(--navy); }
+  .sub{ color: var(--text-muted); font-size: 14.5px; max-width: 560px; line-height: 1.5; }
+  .meta{ text-align:right; font-family:'JetBrains Mono', monospace; font-size: 11.5px; color: var(--text-faint); }
+  .meta strong{ color: var(--text-muted); font-weight: 600; }
+  .logout-btn{ margin-top: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 4px 10px; border-radius: 6px; cursor: pointer; }
+  .logout-btn:hover{ background: var(--slate-soft); }
+
+  .login-screen{ position: fixed; inset: 0; background: var(--bg); display:flex; align-items:center; justify-content:center; z-index: 200; padding: 24px; }
+  .login-card{ background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px 30px; width: 100%; max-width: 380px; box-shadow: 0 20px 60px rgba(15,42,74,0.12); }
+  .login-eyebrow{ font-family:'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .04em; color: var(--text-faint); text-transform: uppercase; margin-bottom: 10px; }
+  .login-title{ font-family:'Manrope', sans-serif; font-weight: 700; font-size: 18px; color: var(--navy); margin: 0 0 8px; }
+  .login-sub{ font-size: 12.5px; color: var(--text-muted); line-height: 1.5; margin-bottom: 20px; }
+  .login-label{ display:block; font-size: 11.5px; font-weight: 600; color: var(--text-muted); margin-bottom: 5px; }
+  .login-input{ width:100%; box-sizing:border-box; padding: 9px 11px; margin-bottom: 16px; border: 1px solid var(--border); border-radius: 8px; font-size: 13.5px; font-family: inherit; }
+  .login-input:focus{ outline: none; border-color: var(--blue); }
+  .login-error{ color: var(--red); font-size: 12.5px; margin: -8px 0 12px; min-height: 1em; }
+  .login-submit{ width:100%; padding: 10px; border:none; border-radius: 8px; background: var(--blue); color:#fff; font-weight:600; font-size: 13.5px; cursor:pointer; }
+  .login-submit:hover{ filter: brightness(1.05); }
+  .login-submit:disabled{ opacity: .6; cursor: default; }
+
+  .kpis{ display:grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 28px; }
+  .kpi{ background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 16px; position: relative; overflow: hidden; }
+  .kpi::before{ content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background: var(--blue); }
+  .kpi.alt::before{ background: var(--teal); }
+  .kpi.warn::before{ background: var(--amber); }
+  .kpi.danger::before{ background: var(--red); }
+  .kpi.clickable{ cursor: pointer; transition: box-shadow .15s ease, transform .15s ease; }
+  .kpi.clickable:hover{ box-shadow: 0 4px 14px rgba(15,42,74,0.08); transform: translateY(-1px); }
+  .kpi-label{ font-size: 10.8px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-faint); font-weight: 600; margin-bottom: 9px; }
+  .kpi-value{ font-family:'Manrope', sans-serif; font-size: 26px; font-weight: 800; color: var(--navy); line-height: 1; display:flex; align-items:baseline; gap: 6px; }
+  .kpi-value span{ font-family:'JetBrains Mono', monospace; font-size: 12px; font-weight: 500; color: var(--text-faint); }
+  .kpi-foot{ margin-top: 7px; font-size: 11.5px; color: var(--text-muted); }
+  .kpi-link{ margin-top: 7px; font-size: 11px; color: var(--blue); font-weight: 600; display:flex; align-items:center; gap:3px; }
+
+  .tabs{ display:flex; gap: 6px; margin-bottom: 22px; border-bottom: 1px solid var(--border); }
+  .tab{ font-family:'JetBrains Mono', monospace; font-size: 12.5px; padding: 10px 4px; margin-right: 22px; color: var(--text-faint); cursor: pointer; border-bottom: 2px solid transparent; letter-spacing: 0.02em; user-select: none; }
+  .tab.active{ color: var(--navy); border-bottom-color: var(--blue); font-weight: 600; }
+  .tab-count{ color: var(--text-faint); font-weight: 400; }
+
+  .section{ background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 20px; overflow: hidden; }
+  .section-head{ display:flex; align-items:center; justify-content: space-between; padding: 18px 22px; border-bottom: 1px solid var(--border-soft); background: linear-gradient(180deg, #FBFCFE, #FFFFFF); }
+  .section-title-group{ display:flex; align-items:center; gap: 12px; }
+  .section-icon{ width: 34px; height:34px; border-radius: 8px; display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono', monospace; font-weight:600; font-size: 13px; flex-shrink:0; }
+  .icon-hr{ background: var(--blue-soft); color: var(--blue); }
+  .icon-tender{ background: var(--teal-soft); color: var(--teal); }
+  .section-title{ font-family:'Manrope', sans-serif; font-weight: 700; font-size: 16.5px; color: var(--navy); }
+  .section-desc{ font-size: 12.5px; color: var(--text-faint); margin-top: 1px; }
+  .section-stats{ display:flex; gap: 22px; font-family:'JetBrains Mono', monospace; font-size: 12px; color: var(--text-muted); }
+  .section-stats b{ color: var(--navy); font-weight: 600; }
+
+  .module-list{ padding: 6px 22px 14px; }
+  .list-head{
+    display:grid; grid-template-columns: 16px 22px 1fr 90px 90px 100px 90px 130px; gap: 14px;
+    padding: 8px 0 6px; font-family:'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.05em;
+    text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);
+  }
+  .list-head .r{ text-align:right; }
+
+  .module-group{ border-bottom: 1px solid var(--border-soft); }
+  .module-group:last-child{ border-bottom: none; }
+
+  .module-row{
+    display:grid; grid-template-columns: 16px 22px 1fr 90px 90px 100px 90px 130px; align-items:center; gap: 14px;
+    padding: 13px 0; cursor: pointer; user-select:none;
+  }
+  .module-row:hover .module-name{ color: var(--blue); }
+
+  .chevron{
+    font-size: 10px; color: var(--text-faint); transition: transform .15s ease;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .module-group.open .chevron{ transform: rotate(90deg); color: var(--blue); }
+
+  .tick{ font-family:'JetBrains Mono', monospace; font-size: 10.5px; color: var(--text-faint); text-align:center; }
+  .module-name{ font-size: 13.8px; font-weight: 500; color: var(--text); transition: color .15s ease; }
+  .datecell{ font-family:'JetBrains Mono', monospace; font-size: 11.5px; color: var(--text-faint); text-align: center; }
+
+  .bar-track{ height: 6px; background: var(--slate-soft); border-radius: 4px; overflow: hidden; position: relative; }
+  .bar-fill{ height: 100%; border-radius: 4px; background: var(--blue); }
+  .bar-fill.tender{ background: var(--teal); }
+  .bar-fill.zero{ background: var(--border); }
+
+  .frcount{ font-family:'JetBrains Mono', monospace; font-size: 12px; color: var(--text-muted); text-align: right; }
+
+  .badges{ display:flex; justify-content:flex-end; gap:6px; }
+  .badge{ font-family:'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 20px; white-space: nowrap; border: none; }
+  .badge.not-started{ background: var(--slate-soft); color: var(--text-faint); }
+  .badge.in-progress{ background: var(--blue-soft); color: var(--blue); }
+  .badge.on-track{ background: var(--green-soft); color: var(--green); }
+  .badge.attention{ background: var(--amber-soft); color: var(--amber); }
+  .badge.oi{ background: var(--red-soft); color: var(--red); cursor: pointer; font-family:'JetBrains Mono', monospace; }
+  .badge.oi:hover{ filter: brightness(0.95); }
+  .badge.oi-mini{ background: var(--red-soft); color: var(--red); cursor:pointer; font-size:10px; padding:2px 6px; }
+
+  /* ---------- FR expand panel ---------- */
+  .fr-panel{
+    max-height: 0; overflow: hidden; transition: max-height .2s ease;
+    background: #FBFCFE;
+    border-top: 1px dashed transparent;
+  }
+  .module-group.open .fr-panel{ border-top-color: var(--border-soft); }
+  .fr-panel-inner{ padding: 4px 0 12px 38px; }
+
+  .fr-empty{ font-size: 12px; color: var(--text-faint); padding: 12px 0; font-style: italic; }
+
+  .mod-oi-note{
+    display:flex; align-items:center; gap:8px;
+    font-size: 11.5px; color: var(--text-muted); padding: 10px 0 4px;
+  }
+
+  .fr-row{
+    display:grid; grid-template-columns: 100px 1fr 110px 90px; align-items:center; gap: 12px;
+    padding: 9px 10px; border-radius: 8px;
+  }
+  .fr-row:hover{ background: #F2F5FA; }
+  .fr-id{ font-family:'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600; color: var(--navy); }
+  .fr-title{ font-size: 13px; color: var(--text); }
+  .fr-desc-icon{ margin-left: 6px; color: var(--text-faint); cursor: pointer; font-size: 12px; }
+  .fr-desc-icon:hover{ color: var(--blue); }
+  .fr-status{ display:flex; justify-content:flex-start; }
+  .fr-oi{ display:flex; justify-content:flex-end; }
+
+  .footnote{ margin-top: 22px; padding: 14px 18px; border: 1px dashed var(--border); border-radius: var(--radius); font-size: 12.5px; color: var(--text-muted); line-height: 1.6; background: #FCFDFE; }
+  .footnote b{ color: var(--navy); }
+  .legend{ display:flex; gap: 16px; margin-top: 10px; flex-wrap: wrap; }
+  .legend-item{ display:flex; align-items:center; gap:6px; font-size: 11.5px; color: var(--text-muted); }
+  .dot{ width:8px; height:8px; border-radius: 2px; }
+
+  .overlay{ position: fixed; inset: 0; background: rgba(15,42,74,0.35); display: none; align-items: center; justify-content: center; z-index: 100; padding: 24px; }
+  .overlay.open{ display:flex; }
+  .dialog{ background: var(--card); border-radius: 14px; width: 100%; max-width: 560px; max-height: 78vh; display:flex; flex-direction:column; box-shadow: 0 20px 60px rgba(15,42,74,0.25); overflow:hidden; }
+  .dialog-head{ padding: 18px 22px; border-bottom: 1px solid var(--border-soft); display:flex; justify-content:space-between; align-items:flex-start; gap: 12px; }
+  .dialog-title{ font-family:'Manrope', sans-serif; font-weight: 700; font-size: 16px; color: var(--navy); }
+  .dialog-sub{ font-size: 12px; color: var(--text-faint); margin-top: 3px; font-family: 'JetBrains Mono', monospace; }
+  .dialog-close{ border: none; background: var(--slate-soft); color: var(--text-muted); width: 26px; height: 26px; border-radius: 7px; cursor: pointer; font-size: 14px; line-height:1; flex-shrink:0; }
+  .dialog-close:hover{ background: var(--border); }
+  .dialog-body{ padding: 8px 22px 20px; overflow-y: auto; }
+  .oi-item{ padding: 13px 0; border-bottom: 1px solid var(--border-soft); }
+  .oi-item:last-child{ border-bottom: none; }
+  .oi-top{ display:flex; align-items:center; gap: 8px; margin-bottom: 4px; }
+  .oi-id{ font-family:'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--red); background: var(--red-soft); padding: 2px 7px; border-radius: 5px; }
+  .oi-owner{ font-family:'JetBrains Mono', monospace; font-size: 10.5px; color: var(--text-faint); }
+  .oi-desc{ font-size: 13px; color: var(--text); line-height: 1.5; }
+  .empty-state{ padding: 30px 4px; text-align:center; color: var(--text-faint); font-size: 13px; line-height: 1.6; }
+
+  @media (max-width: 900px){ .kpis{ grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 720px){
+    .kpis{ grid-template-columns: repeat(2, 1fr); }
+    .module-row, .list-head{ grid-template-columns: 16px 16px 1fr 60px; }
+    .datecell, .frcount, .badges, .list-head .r{ display:none; }
+    .section-stats{ display:none; }
+    .fr-panel-inner{ padding-left: 20px; }
+    .fr-row{ grid-template-columns: 80px 1fr; }
+    .fr-status, .fr-oi{ display:none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="login-screen" id="loginScreen">
+  <form class="login-card" id="loginForm">
+    <div class="login-eyebrow">Pioneer Foundation Engineering · ERP Implementation</div>
+    <h2 class="login-title">Sign in with your ERPNext account</h2>
+    <div class="login-sub">Your Frappe username and password — the dashboard shows data according to your own ERPNext permissions.</div>
+    <label class="login-label" for="loginUsr">Username or email</label>
+    <input class="login-input" id="loginUsr" name="usr" type="text" autocomplete="username" required>
+    <label class="login-label" for="loginPwd">Password</label>
+    <input class="login-input" id="loginPwd" name="pwd" type="password" autocomplete="current-password" required>
+    <div class="login-error" id="loginError"></div>
+    <button class="login-submit" id="loginSubmit" type="submit">Sign in</button>
+  </form>
+</div>
+
+<div class="wrap" id="dashboardWrap" style="display:none;">
+
+  <div class="topbar">
+    <div>
+      <div class="eyebrow">Pioneer Foundation Engineering · ERP Implementation</div>
+      <h1>Progress Overview</h1>
+      <div class="sub">Centralised view of the HR and Tender modules being built on ERPNext — tracked at Module → Functional Requirement → Open Item level. Click a module to see its FRs.</div>
+    </div>
+    <div class="meta">
+      Prepared by <strong>Akhilam Consulting</strong><br>
+      Last updated <strong id="lastUpdated">—</strong>
+      <div><button class="logout-btn" id="logoutBtn" type="button">Sign out</button></div>
+    </div>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi">
+      <div class="kpi-label">Overall Completion</div>
+      <div class="kpi-value" id="kpiOverall">—<span>%</span></div>
+      <div class="kpi-foot" id="kpiOverallFoot">—</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Functional Reqs</div>
+      <div class="kpi-value" id="kpiFrTotal">—<span>total</span></div>
+      <div class="kpi-foot" id="kpiFrFoot">—</div>
+    </div>
+    <div class="kpi alt clickable" id="kpiOiCard">
+      <div class="kpi-label">Open Items Pending</div>
+      <div class="kpi-value" id="kpiOi">—<span></span></div>
+      <div class="kpi-link">VIEW ALL →</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Modules Not Started</div>
+      <div class="kpi-value" id="kpiNotStarted">—<span>of —</span></div>
+      <div class="kpi-foot" id="kpiNotStartedFoot">—</div>
+    </div>
+    <div class="kpi warn clickable" id="kpiActiveCard">
+      <div class="kpi-label">Active This Week</div>
+      <div class="kpi-value" id="kpiActive">0<span>tasks</span></div>
+      <div class="kpi-link">VIEW LIST →</div>
+    </div>
+    <div class="kpi danger clickable" id="kpiOverdueCard">
+      <div class="kpi-label">Overdue Open Tasks</div>
+      <div class="kpi-value" id="kpiOverdue">0<span>tasks</span></div>
+      <div class="kpi-link">VIEW LIST →</div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-filter="all">ALL MODULES <span class="tab-count">(0)</span></div>
+    <div class="tab" data-filter="hr">HR <span class="tab-count">(0)</span></div>
+    <div class="tab" data-filter="tender">TENDER <span class="tab-count">(0)</span></div>
+  </div>
+
+  <div id="sections">
+    <div class="empty-state" id="loadingState">Loading live data from ERPNext…</div>
+  </div>
+
+  <div class="footnote">
+    <b>Reading this view —</b> click any module row to expand its Functional Requirements (ID, title, status, and its own Open Items). Progress % reflects FRs marked Completed in ERPNext. Start / Estimated End dates show once scheduling is entered in ERPNext — currently blank. Click a red Open Item badge, or the Active/Overdue KPI cards, for the underlying list.
+    <div class="legend">
+      <div class="legend-item"><span class="dot" style="background:var(--slate)"></span> Not started</div>
+      <div class="legend-item"><span class="dot" style="background:var(--blue)"></span> In progress</div>
+      <div class="legend-item"><span class="dot" style="background:var(--green)"></span> On track / complete</div>
+      <div class="legend-item"><span class="dot" style="background:var(--red)"></span> Open item pending</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="dialog">
+    <div class="dialog-head">
+      <div>
+        <div class="dialog-title" id="dialogTitle">Title</div>
+        <div class="dialog-sub" id="dialogSub">—</div>
+      </div>
+      <button class="dialog-close" id="dialogClose">✕</button>
+    </div>
+    <div class="dialog-body" id="dialogBody"></div>
+  </div>
+</div>
+
+<script>
+function frStats(m){
+  const total = m.frs.length;
+  const done = m.frs.filter(f => f.status === 'Completed').length;
+  return { total, done, pct: total ? Math.round(done/total*100) : 0 };
+}
+function moduleOiTotal(m){ return m.moduleOi.length + m.frs.reduce((a,f)=>a+f.oi.length,0); }
+function fmtDate(d){ return d ? d : '—'; }
+
+function statusBadge(m){
+  const { total, pct } = frStats(m);
+  if (total === 0) return '<span class="badge not-started">NOT STARTED</span>';
+  if (pct === 100) return '<span class="badge on-track">COMPLETE</span>';
+  if (pct > 0) return '<span class="badge in-progress">IN PROGRESS</span>';
+  return '<span class="badge not-started">NOT STARTED</span>';
+}
+function frStatusBadge(status){
+  // Mirrors ERPNext Task's full status set: Open, Working, Pending Review, Rework, Overdue, Completed.
+  if (status === 'Completed') return '<span class="badge on-track">COMPLETED</span>';
+  if (status === 'Working') return '<span class="badge in-progress">WORKING</span>';
+  if (status === 'Pending Review') return '<span class="badge attention">PENDING REVIEW</span>';
+  if (status === 'Rework') return '<span class="badge attention">REWORK</span>';
+  if (status === 'Overdue') return '<span class="badge attention">OVERDUE</span>';
+  return '<span class="badge not-started">OPEN</span>';
+}
+
+function renderFrPanel(key, mi, m){
+  if (m.frs.length === 0 && m.moduleOi.length === 0){
+    return `<div class="fr-panel-inner"><div class="fr-empty">Not started — no FRs scoped under this module yet.</div></div>`;
+  }
+  const moduleOiHtml = m.moduleOi.length ? `
+    <div class="mod-oi-note">
+      Module-level Open Items (not tied to a single FR):
+      <span class="badge oi-mini" data-oi-scope="${key}:${mi}:module">${m.moduleOi.length} OI</span>
+    </div>` : '';
+
+  const frRows = m.frs.map((f, fi) => `
+    <div class="fr-row">
+      <div class="fr-id">${f.id}</div>
+      <div class="fr-title">${f.title}<span class="fr-desc-icon" data-fr-desc="${key}:${mi}:${fi}" title="View description">ⓘ</span></div>
+      <div class="fr-status">${frStatusBadge(f.status)}</div>
+      <div class="fr-oi">${f.oi.length ? `<span class="badge oi-mini" data-oi-scope="${key}:${mi}:fr:${fi}">${f.oi.length} OI</span>` : ''}</div>
+    </div>`).join('');
+
+  return `<div class="fr-panel-inner">${moduleOiHtml}${frRows || '<div class="fr-empty">No FRs scoped yet.</div>'}</div>`;
+}
+
+// Presentation-only config per section — not part of the ERPNext payload,
+// so it's kept here rather than expected on `group` (live data only ever
+// supplies `label` and `modules`).
+const SECTION_UI = {
+  hr:     { icon: "HR", iconClass: "icon-hr",     barClass: "" },
+  tender: { icon: "TN", iconClass: "icon-tender", barClass: "tender" },
+};
+
+function renderSection(key, group){
+  const ui = SECTION_UI[key];
+  const totalFr = group.modules.reduce((a,m)=>a+m.frs.length,0);
+  const doneFr = group.modules.reduce((a,m)=>a+frStats(m).done,0);
+  const totalOi = group.modules.reduce((a,m)=>a+moduleOiTotal(m),0);
+
+  const rows = group.modules.map((m, i) => {
+    const { total, done, pct } = frStats(m);
+    const barClass = total === 0 ? 'zero' : ui.barClass;
+    const oiCount = moduleOiTotal(m);
+    const oiBadge = oiCount > 0 ? `<span class="badge oi" data-oi-module="${key}:${i}">${oiCount} OI</span>` : '';
+    return `
+      <div class="module-group" data-group-toggle="${key}:${i}">
+        <div class="module-row" data-row-toggle="${key}:${i}">
+          <div class="chevron">▶</div>
+          <div class="tick">${String(i+1).padStart(2,'0')}</div>
+          <div class="module-name">${m.name}</div>
+          <div class="datecell">${fmtDate(m.start)}</div>
+          <div class="datecell">${fmtDate(m.end)}</div>
+          <div class="bar-track"><div class="bar-fill ${barClass}" style="width:${total === 0 ? 100 : Math.max(pct,3)}%"></div></div>
+          <div class="frcount">${done}/${total} FR</div>
+          <div class="badges">${oiBadge}${statusBadge(m)}</div>
+        </div>
+        <div class="fr-panel">${renderFrPanel(key, i, m)}</div>
+      </div>`;
+  }).join('');
+
+  return `
+    <div class="section" data-group="${key}">
+      <div class="section-head">
+        <div class="section-title-group">
+          <div class="section-icon ${ui.iconClass}">${ui.icon}</div>
+          <div>
+            <div class="section-title">${group.label}</div>
+            <div class="section-desc">${group.modules.length} modules scoped from BRD</div>
+          </div>
+        </div>
+        <div class="section-stats">
+          <div><b>${doneFr}/${totalFr}</b> FR complete</div>
+          <div><b>${totalOi}</b> open items</div>
+        </div>
+      </div>
+      <div class="module-list">
+        <div class="list-head">
+          <div></div><div></div><div>MODULE</div><div class="r">START</div><div class="r">EST. END</div><div>PROGRESS</div><div class="r">FRs</div><div class="r">STATUS</div>
+        </div>
+        ${rows}
+      </div>
+    </div>`;
+}
+
+let data = null; // populated once the live fetch resolves — no mock data shown before then
+
+function render(){
+  if (!data) return; // still loading — leave the loadingState markup as-is
+
+  document.getElementById('sections').innerHTML =
+    renderSection('hr', data.hr) + renderSection('tender', data.tender);
+
+  const allMods = [...data.hr.modules, ...data.tender.modules];
+  const totalFr = allMods.reduce((a,m)=>a+m.frs.length,0);
+  const doneFr = allMods.reduce((a,m)=>a+frStats(m).done,0);
+  const notStarted = allMods.filter(m => m.frs.length === 0).length;
+  const activeCount = (data.activeTasks || []).length;
+  const overdueCount = (data.overdueTasks || []).length;
+  const totalOi = allMods.reduce((a,m)=>a+moduleOiTotal(m),0);
+  const hrCount = data.hr.modules.length;
+  const tenderCount = data.tender.modules.length;
+  const hrFrCount = data.hr.modules.reduce((a,m)=>a+m.frs.length,0);
+  const tenderFrCount = data.tender.modules.reduce((a,m)=>a+m.frs.length,0);
+
+  document.getElementById('kpiOverall').innerHTML = `${totalFr ? Math.round(doneFr/totalFr*100) : 0}<span>%</span>`;
+  document.getElementById('kpiOverallFoot').textContent = `${doneFr} of ${totalFr} FRs completed`;
+  document.getElementById('kpiFrTotal').innerHTML = `${totalFr}<span>total</span>`;
+  document.getElementById('kpiFrFoot').textContent = `${hrFrCount} HR · ${tenderFrCount} Tender`;
+  document.getElementById('kpiOi').innerHTML = `${totalOi}<span>of ${totalOi}</span>`;
+  document.getElementById('kpiNotStarted').innerHTML = `${notStarted}<span>of ${allMods.length}</span>`;
+  document.getElementById('kpiNotStartedFoot').textContent = allMods.filter(m=>m.frs.length===0).map(m=>m.name).slice(0,2).join(', ') || '—';
+  document.getElementById('kpiActive').innerHTML = `${activeCount}<span>tasks</span>`;
+  document.getElementById('kpiOverdue').innerHTML = `${overdueCount}<span>tasks</span>`;
+
+  document.querySelectorAll('.tab')[0].querySelector('.tab-count').textContent = `(${hrCount + tenderCount})`;
+  document.querySelectorAll('.tab')[1].querySelector('.tab-count').textContent = `(${hrCount})`;
+  document.querySelectorAll('.tab')[2].querySelector('.tab-count').textContent = `(${tenderCount})`;
+
+  const stamp = data.generatedAt ? new Date(data.generatedAt) : new Date();
+  document.getElementById('lastUpdated').textContent =
+    stamp.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }) +
+    ' ' + stamp.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
+
+  attachHandlers();
+}
+
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    const f = tab.dataset.filter;
+    document.querySelectorAll('.section').forEach(sec => {
+      sec.style.display = (f === 'all' || sec.dataset.group === f) ? '' : 'none';
+    });
+  });
+});
+
+const overlay = document.getElementById('overlay');
+const dialogTitle = document.getElementById('dialogTitle');
+const dialogSub = document.getElementById('dialogSub');
+const dialogBody = document.getElementById('dialogBody');
+
+function openDialog(title, sub, items){
+  dialogTitle.textContent = title;
+  dialogSub.textContent = sub;
+  if (!items || items.length === 0){
+    dialogBody.innerHTML = `<div class="empty-state">Nothing here right now — this list will populate as data comes in from ERPNext.</div>`;
+  } else {
+    dialogBody.innerHTML = items.map(it => `
+      <div class="oi-item">
+        <div class="oi-top"><span class="oi-id">${it.id}</span><span class="oi-owner">${it.owner}</span></div>
+        <div class="oi-desc">${it.desc}</div>
+      </div>`).join('');
+  }
+  overlay.classList.add('open');
+}
+function closeDialog(){ overlay.classList.remove('open'); }
+document.getElementById('dialogClose').addEventListener('click', closeDialog);
+overlay.addEventListener('click', (e) => { if (e.target === overlay) closeDialog(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDialog(); });
+
+function attachHandlers(){
+  // module row expand/collapse
+  document.querySelectorAll('[data-row-toggle]').forEach(row => {
+    row.addEventListener('click', () => {
+      const group = row.closest('.module-group');
+      const panel = group.querySelector('.fr-panel');
+      const isOpen = group.classList.toggle('open');
+      panel.style.maxHeight = isOpen ? panel.scrollHeight + 'px' : '0px';
+    });
+  });
+
+  // module-level "N OI" badge -> full module OI list (module-direct + all FR-level)
+  document.querySelectorAll('[data-oi-module]').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const [key, idx] = el.dataset.oiModule.split(':');
+      const m = data[key].modules[idx];
+      const all = [...m.moduleOi, ...m.frs.flatMap(f => f.oi)];
+      openDialog(`Open Items — ${m.name}`, `${data[key].label}`, all);
+    });
+  });
+
+  // scoped OI badges inside the FR panel (module-level or per-FR)
+  document.querySelectorAll('[data-oi-scope]').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const parts = el.dataset.oiScope.split(':');
+      const key = parts[0], mi = parts[1], scope = parts[2];
+      const m = data[key].modules[mi];
+      if (scope === 'module'){
+        openDialog(`Module-level Open Items — ${m.name}`, `${data[key].label}`, m.moduleOi);
+      } else {
+        const fi = parts[3];
+        const f = m.frs[fi];
+        openDialog(`Open Items — ${f.id}`, `${f.title}`, f.oi);
+      }
+    });
+  });
+
+  // FR description icon -> single-item dialog showing the FR's description
+  document.querySelectorAll('[data-fr-desc]').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const [key, mi, fi] = el.dataset.frDesc.split(':');
+      const f = data[key].modules[mi].frs[fi];
+      const items = [{
+        id: f.id,
+        owner: f.status,
+        desc: f.description || 'No description added in ERPNext yet.',
+      }];
+      openDialog(`Description — ${f.id}`, `${f.title}`, items);
+    });
+  });
+}
+
+document.getElementById('kpiOiCard').addEventListener('click', () => {
+  if (!data) return;
+  const all = [...data.hr.modules, ...data.tender.modules].flatMap(m => [...m.moduleOi, ...m.frs.flatMap(f=>f.oi)]);
+  openDialog('All Open Items', `${all.length} pending across HR & Tender`, all);
+});
+document.getElementById('kpiActiveCard').addEventListener('click', () => {
+  if (!data) return;
+  // activeTasks come from Timesheet rows logged against a task this week —
+  // see netlify/functions/get-progress-data.js -> getActiveTaskNamesThisWeek()
+  const items = (data.activeTasks || []).map(t => ({ id: t.id, owner: t.status, desc: t.title }));
+  openDialog('Active Tasks This Week', 'Based on timesheets logged this week', items);
+});
+document.getElementById('kpiOverdueCard').addEventListener('click', () => {
+  if (!data) return;
+  const items = (data.overdueTasks || []).map(t => ({ id: t.id, owner: `Due ${t.dueDate}`, desc: t.title }));
+  openDialog('Overdue Open Tasks', 'Past expected end date, not yet Completed/Cancelled', items);
+});
+
+function showLoadError(message){
+  document.getElementById('sections').innerHTML =
+    `<div class="empty-state">⚠ Could not load live data from ERPNext.<br>${message}</div>`;
+}
+
+const loginScreen = document.getElementById('loginScreen');
+const dashboardWrap = document.getElementById('dashboardWrap');
+const loginForm = document.getElementById('loginForm');
+const loginError = document.getElementById('loginError');
+const loginSubmit = document.getElementById('loginSubmit');
+
+function showLogin(message){
+  loginError.textContent = message || '';
+  loginScreen.style.display = 'flex';
+  dashboardWrap.style.display = 'none';
+}
+function showDashboard(){
+  loginScreen.style.display = 'none';
+  dashboardWrap.style.display = '';
+}
+
+// ---------- bootstrap: fetch live data (per-user ERPNext session), no mock fallback ----------
+async function loadDashboard(){
+  try {
+    const res = await fetch('/.netlify/functions/get-progress-data', { credentials: 'same-origin' });
+    if (res.status === 401) {
+      showLogin();
+      return;
+    }
+    const live = await res.json().catch(() => null);
+    if (!res.ok) {
+      const detail = live && live.error ? live.error : `HTTP ${res.status}`;
+      const stage = live && live.stage ? ` [stage: ${live.stage}]` : '';
+      throw new Error(`${detail}${stage}`);
+    }
+    if (live.error) throw new Error(live.error);
+    data = live;
+    showDashboard();
+    render();
+  } catch (err) {
+    console.error('Live data fetch failed:', err.message);
+    showDashboard();
+    showLoadError(err.message);
+  }
+}
+
+loginForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  loginError.textContent = '';
+  loginSubmit.disabled = true;
+  loginSubmit.textContent = 'Signing in…';
+  try {
+    const res = await fetch('/.netlify/functions/login', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        usr: document.getElementById('loginUsr').value,
+        pwd: document.getElementById('loginPwd').value,
+      }),
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(body.error || `Login failed (${res.status})`);
+    document.getElementById('loginPwd').value = '';
+    await loadDashboard();
+  } catch (err) {
+    loginError.textContent = err.message;
+  } finally {
+    loginSubmit.disabled = false;
+    loginSubmit.textContent = 'Sign in';
+  }
+});
+
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  try {
+    await fetch('/.netlify/functions/logout', { method: 'POST', credentials: 'same-origin' });
+  } finally {
+    data = null;
+    showLogin();
+  }
+});
+
+loadDashboard();
+</script>
+</body>
+</html>

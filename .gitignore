@@ -1,0 +1,6 @@
+.env
+node_modules/
+.netlify/
+.DS_Store
+image.png
+.claude/settings.local.json

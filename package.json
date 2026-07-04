@@ -1,0 +1,15 @@
+{
+  "name": "pioneer-erp-progress-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Client-facing HR + Tender module implementation progress dashboard for Pioneer Foundation Engineering, backed live by ERPNext.",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "dev": "netlify dev"
+  },
+  "devDependencies": {
+    "netlify-cli": "^17.0.0"
+  }
+}
