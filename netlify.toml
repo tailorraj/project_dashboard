@@ -11,6 +11,11 @@
   to = "/.netlify/functions/get-progress-data"
   status = 200
 
+[[redirects]]
+  from = "/api/lead-data"
+  to = "/.netlify/functions/get-lead-data"
+  status = 200
+
 [[headers]]
   for = "/*"
   [headers.values]

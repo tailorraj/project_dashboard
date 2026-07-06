@@ -1,0 +1,1366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pioneer ERP — Project Lead View</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #F0F4F9;
+    --card: #FFFFFF;
+    --border: #E3E9F1;
+    --border-soft: #EDF1F7;
+    --navy: #0F2A4A;
+    --blue: #1D4ED8;
+    --blue-soft: #EAF0FE;
+    --teal: #0891B2;
+    --teal-soft: #E6F6F9;
+    --text: #172033;
+    --text-muted: #64748B;
+    --text-faint: #9AA6B8;
+    --green: #15803D;
+    --green-soft: #E9F7EF;
+    --amber: #B45309;
+    --amber-soft: #FDF2E3;
+    --slate: #94A3B8;
+    --slate-soft: #F1F4F8;
+    --red: #B91C1C;
+    --red-soft: #FCEBEB;
+    --purple: #7C3AED;
+    --purple-soft: #F3EFFE;
+    --radius: 12px;
+  }
+
+  *{ box-sizing: border-box; }
+  body{ margin:0; background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased; }
+
+  /* ---- topbar ---- */
+  .topbar{
+    background: var(--navy); color:#fff; padding: 0 16px;
+    display:flex; align-items:center; justify-content:space-between; height: 54px;
+    position: sticky; top:0; z-index:50;
+  }
+  .topbar-left{ display:flex; align-items:center; gap:20px; }
+  .topbar-logo{ font-family:'Manrope',sans-serif; font-weight:800; font-size:15px; letter-spacing:-0.01em; }
+  .topbar-logo span{ color:#93C5FD; }
+  .topbar-badge{
+    font-family:'JetBrains Mono',monospace; font-size:10.5px; font-weight:600;
+    background:rgba(255,255,255,0.12); padding:3px 9px; border-radius:4px; letter-spacing:0.05em;
+  }
+  .topbar-right{ display:flex; align-items:center; gap:12px; }
+  .btn-ghost{
+    font-family:'JetBrains Mono',monospace; font-size:11px; color:rgba(255,255,255,0.65);
+    background:none; border:1px solid rgba(255,255,255,0.18); border-radius:5px;
+    padding:5px 12px; cursor:pointer; text-decoration:none;
+    transition: color .12s, border-color .12s;
+  }
+  .btn-ghost:hover{ color:#fff; border-color:rgba(255,255,255,0.4); }
+  .topbar-stamp{ font-family:'JetBrains Mono',monospace; font-size:10.5px; color:rgba(255,255,255,0.4); }
+
+  /* ---- login screen ---- */
+  .login-screen{ position:fixed; inset:0; background:var(--bg); display:flex; align-items:center; justify-content:center; z-index:200; padding:24px; }
+  .login-card{ background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:32px 30px; width:100%; max-width:380px; box-shadow:0 20px 60px rgba(15,42,74,0.12); }
+  .login-eyebrow{ font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.04em; color:var(--text-faint); text-transform:uppercase; margin-bottom:10px; }
+  .login-title{ font-family:'Manrope',sans-serif; font-weight:700; font-size:18px; color:var(--navy); margin:0 0 8px; }
+  .login-sub{ font-size:12.5px; color:var(--text-muted); line-height:1.5; margin-bottom:20px; }
+  .login-label{ display:block; font-size:11.5px; font-weight:600; color:var(--text-muted); margin-bottom:5px; }
+  .login-input{ width:100%; padding:9px 11px; margin-bottom:16px; border:1px solid var(--border); border-radius:8px; font-size:13.5px; font-family:inherit; }
+  .login-input:focus{ outline:none; border-color:var(--blue); }
+  .login-error{ color:var(--red); font-size:12.5px; margin:-8px 0 12px; min-height:1em; }
+  .login-submit{ width:100%; padding:10px; border:none; border-radius:8px; background:var(--blue); color:#fff; font-weight:600; font-size:13.5px; cursor:pointer; }
+  .login-submit:disabled{ opacity:.6; cursor:default; }
+
+  /* ---- page body ---- */
+  .page{ padding:20px 16px 60px; }
+
+  /* ---- KPI strip ---- */
+  .kpis{ display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-bottom:22px; }
+  .kpi{ background:var(--card); border:1px solid var(--border); border-radius:10px; padding:14px 16px; position:relative; overflow:hidden; }
+  .kpi::before{ content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--blue); }
+  .kpi.green::before{ background:var(--green); }
+  .kpi.amber::before{ background:var(--amber); }
+  .kpi.red::before{ background:var(--red); }
+  .kpi.purple::before{ background:var(--purple); }
+  .kpi-label{ font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-faint); font-weight:600; margin-bottom:8px; }
+  .kpi-val{ font-family:'Manrope',sans-serif; font-size:24px; font-weight:800; color:var(--navy); line-height:1; }
+  .kpi-val span{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-faint); font-weight:500; margin-left:4px; }
+  .kpi-foot{ margin-top:6px; font-size:11px; color:var(--text-muted); }
+
+  /* ---- view tabs ---- */
+  .view-tabs{
+    display:flex; gap:2px; margin-bottom:18px;
+    border-bottom:2px solid var(--border);
+  }
+  .view-tab{
+    font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:600;
+    padding:10px 20px; cursor:pointer; color:var(--text-faint);
+    border-bottom:2px solid transparent; margin-bottom:-2px;
+    transition:color .15s, border-color .15s;
+    user-select:none; display:flex; align-items:center; gap:7px;
+  }
+  .view-tab:hover{ color:var(--text-muted); }
+  .view-tab.active{ color:var(--navy); border-bottom-color:var(--blue); }
+  .view-tab-dot{ width:6px; height:6px; border-radius:50%; }
+
+  /* ---- tab panels ---- */
+  .tab-panel{ display:none; }
+  .tab-panel.active{ display:block; }
+
+  /* ---- card ---- */
+  .card{ background:var(--card); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; margin-bottom:16px; }
+  .card-head{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 18px; border-bottom:1px solid var(--border-soft);
+    background:linear-gradient(180deg,#FBFCFE,#FFFFFF);
+  }
+  .card-title{ font-family:'Manrope',sans-serif; font-weight:700; font-size:14.5px; color:var(--navy); }
+  .card-sub{ font-size:11.5px; color:var(--text-faint); margin-top:2px; }
+  .card-actions{ display:flex; gap:8px; align-items:center; }
+  .card-body{ padding:0; }
+
+  /* ---- Gantt ---- */
+  .gantt-wrap{ overflow-x:auto; }
+  .gantt-inner{ min-width:700px; }
+
+  .gantt-row{ display:flex; align-items:stretch; border-bottom:1px solid var(--border-soft); }
+  .gantt-row:last-child{ border-bottom:none; }
+  .gantt-row.g-section{ background:var(--slate-soft); }
+  .gantt-row.g-fr{ background:#FCFDFF; }
+  .gantt-row.g-fr.hidden{ display:none; }
+
+  .g-label{
+    width:220px; flex-shrink:0; padding:0 12px;
+    display:flex; align-items:center; gap:6px;
+    border-right:1px solid var(--border-soft);
+    font-size:12px; color:var(--text);
+    position:sticky; left:0; background:inherit; z-index:4;
+    min-height:36px;
+  }
+  .g-label.g-section{ font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--text-faint); }
+  .g-label.g-module{ font-size:12.5px; font-weight:600; color:var(--text); cursor:pointer; }
+  .g-label.g-module:hover{ color:var(--blue); }
+  .g-label.g-fr-label{ padding-left:32px; font-size:11.5px; color:var(--text-muted); }
+
+  .g-chevron{ font-size:9px; color:var(--text-faint); transition:transform .15s; flex-shrink:0; }
+  .g-row-module.open .g-chevron{ transform:rotate(90deg); color:var(--blue); }
+
+  .g-lead-chip{
+    font-family:'JetBrains Mono',monospace; font-size:9.5px; background:var(--blue-soft);
+    color:var(--blue); padding:1px 5px; border-radius:3px; white-space:nowrap;
+    overflow:hidden; text-overflow:ellipsis; max-width:80px; flex-shrink:0;
+  }
+  .g-lead-chip.tender{ background:var(--teal-soft); color:var(--teal); }
+
+  .g-chart{
+    flex:1; position:relative; min-height:36px; overflow:visible;
+  }
+  .g-chart.g-header-chart{ height:30px; background:var(--slate-soft); border-bottom:1px solid var(--border); }
+
+  /* month ticks */
+  .g-month{
+    position:absolute; top:0; bottom:0; border-left:1px solid var(--border-soft);
+    display:flex; align-items:center; padding-left:6px;
+    font-family:'JetBrains Mono',monospace; font-size:9.5px; color:var(--text-faint);
+    pointer-events:none;
+  }
+  .g-month:first-child{ border-left:none; }
+
+  /* today line */
+  .g-today{
+    position:absolute; top:0; bottom:0; width:2px;
+    background:#EF4444; opacity:.7; pointer-events:none; z-index:3;
+  }
+  .g-today-label{
+    position:absolute; top:2px; font-family:'JetBrains Mono',monospace;
+    font-size:8.5px; color:#EF4444; white-space:nowrap; transform:translateX(-50%);
+    pointer-events:none; z-index:3;
+  }
+
+  /* bars */
+  .g-bar{
+    position:absolute; height:14px; top:11px; border-radius:3px; min-width:3px;
+    opacity:.85; transition:opacity .15s;
+  }
+  .g-bar:hover{ opacity:1; }
+  .g-bar.hr{ background:var(--blue); }
+  .g-bar.tender{ background:var(--teal); }
+  .g-bar.fr-completed{ background:var(--green); height:10px; top:13px; }
+  .g-bar.fr-working{ background:var(--blue); height:10px; top:13px; opacity:.75; }
+  .g-bar.fr-pending-review{ background:var(--amber); height:10px; top:13px; opacity:.75; }
+  .g-bar.fr-rework{ background:var(--red); height:10px; top:13px; opacity:.65; }
+  .g-bar.fr-open{ background:var(--slate); height:10px; top:13px; opacity:.4; }
+  .g-bar.fr-overdue{ background:var(--red); height:10px; top:13px; }
+
+  .g-no-dates{
+    padding:28px 20px; font-size:13px; color:var(--text-faint);
+    font-style:italic; text-align:center; line-height:1.6;
+  }
+
+  /* Expand / Collapse All button */
+  .btn-gantt-toggle{
+    font-family:'JetBrains Mono',monospace; font-size:10.5px; font-weight:600;
+    padding:3px 10px; border-radius:5px; cursor:pointer;
+    background:var(--slate-soft); color:var(--text-muted);
+    border:1px solid var(--border); transition:background .12s, color .12s;
+  }
+  .btn-gantt-toggle:hover{ background:var(--blue-soft); color:var(--blue); border-color:var(--blue); }
+
+  /* Module bar derived from FR dates — shown with reduced opacity + dashed outline */
+  .g-bar.derived{
+    opacity:.55;
+    outline:1.5px dashed currentColor;
+    outline-offset:-2px;
+  }
+
+  /* bar label tooltip on hover */
+  .g-bar-label{
+    display:none; position:absolute; bottom:calc(100% + 4px); left:50%;
+    transform:translateX(-50%); background:var(--navy); color:#fff;
+    font-family:'JetBrains Mono',monospace; font-size:10px; padding:3px 7px;
+    border-radius:5px; white-space:nowrap; pointer-events:none; z-index:10;
+  }
+  .g-bar:hover .g-bar-label{ display:block; }
+
+  /* ---- Activity log table ---- */
+  .act-table{ width:100%; border-collapse:collapse; font-size:12.5px; }
+  .act-table th{
+    font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.05em;
+    text-transform:uppercase; color:var(--text-faint); text-align:left;
+    padding:9px 14px; background:var(--slate-soft); border-bottom:1px solid var(--border);
+    font-weight:600; position:sticky; top:54px;
+  }
+  .act-table td{ padding:10px 14px; border-bottom:1px solid var(--border-soft); vertical-align:top; }
+  .act-table tr:hover td{ background:#F8FAFD; }
+  .act-table tr:last-child td{ border-bottom:none; }
+  .act-date{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-faint); white-space:nowrap; }
+  .act-day{ font-weight:700; color:var(--text-muted); display:block; }
+  .act-consultant{ font-weight:600; color:var(--text); font-size:12.5px; }
+  .act-role{ font-size:11px; color:var(--text-faint); margin-top:1px; }
+  .act-code{ font-family:'JetBrains Mono',monospace; font-size:11.5px; font-weight:700; color:var(--blue); }
+  .act-title{ font-size:12px; color:var(--text-muted); margin-top:1px; }
+  .act-module{ font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--text-faint); }
+  .act-hours{ font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:700; color:var(--navy); text-align:right; }
+  .act-remarks{ font-size:12px; color:var(--text-muted); max-width:200px; }
+  .act-empty{ padding:28px 14px; text-align:center; color:var(--text-faint); font-size:13px; font-style:italic; }
+
+  /* ---- Weekly plan (full-width in its own tab) ---- */
+
+  .week-badge{
+    font-family:'JetBrains Mono',monospace; font-size:10.5px; font-weight:700;
+    background:var(--navy); color:#fff; padding:3px 9px; border-radius:4px;
+  }
+
+  .agenda-section{ margin:0; padding:0 14px 10px; }
+  .agenda-header{
+    display:flex; align-items:center; gap:8px; padding:10px 0 7px;
+    font-family:'JetBrains Mono',monospace; font-size:10.5px; font-weight:700;
+    text-transform:uppercase; letter-spacing:.06em; color:var(--text-faint);
+    border-top:1px solid var(--border-soft); margin-top:6px;
+  }
+  .agenda-header:first-of-type{ border-top:none; margin-top:0; }
+  .agenda-dot{ width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+
+  .task-item{ padding:8px 0; border-bottom:1px solid var(--border-soft); }
+  .task-item:last-child{ border-bottom:none; }
+  .task-row{ display:flex; align-items:flex-start; gap:8px; }
+  .task-status-dot{ width:7px; height:7px; border-radius:50%; margin-top:5px; flex-shrink:0; }
+  .task-status-dot.working{ background:var(--blue); }
+  .task-status-dot.pending-review{ background:var(--amber); }
+  .task-status-dot.rework{ background:var(--red); }
+  .task-status-dot.open{ background:var(--slate); }
+  .task-status-dot.overdue{ background:var(--red); }
+  .task-content{ flex:1; min-width:0; }
+  .task-id{ font-family:'JetBrains Mono',monospace; font-size:10.5px; font-weight:700; color:var(--navy); }
+  .task-name{ font-size:12px; color:var(--text); line-height:1.4; margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .task-meta{ display:flex; align-items:center; gap:6px; margin-top:3px; flex-wrap:wrap; }
+  .task-module{ font-size:10.5px; color:var(--text-faint); }
+  .task-due{ font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--text-faint); }
+  .task-due.overdue{ color:var(--red); font-weight:600; }
+  .task-assign{ font-size:10.5px; color:var(--blue); }
+
+  .status-chip{
+    font-family:'JetBrains Mono',monospace; font-size:9.5px; font-weight:700; padding:1px 5px;
+    border-radius:3px; white-space:nowrap; flex-shrink:0;
+  }
+  .chip-working{ background:var(--blue-soft); color:var(--blue); }
+  .chip-review{ background:var(--amber-soft); color:var(--amber); }
+  .chip-rework{ background:var(--red-soft); color:var(--red); }
+  .chip-open{ background:var(--slate-soft); color:var(--text-faint); }
+  .chip-overdue{ background:var(--red-soft); color:var(--red); }
+
+  .oi-item-side{ padding:7px 0; border-bottom:1px solid var(--border-soft); }
+  .oi-item-side:last-child{ border-bottom:none; }
+  .oi-id-side{ font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; color:var(--red); }
+  .oi-desc-side{ font-size:12px; color:var(--text-muted); margin-top:2px; line-height:1.4; }
+
+  .empty-msg{ font-size:12px; color:var(--text-faint); font-style:italic; padding:8px 0; }
+
+  .sect-badge{ font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; padding:1px 5px; border-radius:3px; }
+  .sb-hr{ background:var(--blue-soft); color:var(--blue); }
+  .sb-tender{ background:var(--teal-soft); color:var(--teal); }
+
+  /* ---- misc ---- */
+  .empty-state{ padding:32px 20px; text-align:center; color:var(--text-faint); font-size:13px; line-height:1.6; }
+
+  /* ---- access denied screen ---- */
+  .access-screen{
+    position:fixed; inset:0; background:var(--bg); display:none;
+    align-items:center; justify-content:center; z-index:200; padding:24px;
+  }
+  .access-screen.visible{ display:flex; }
+  .access-card{
+    background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+    padding:36px 32px; width:100%; max-width:420px;
+    box-shadow:0 20px 60px rgba(15,42,74,0.12); text-align:center;
+  }
+  .access-icon{
+    width:52px; height:52px; border-radius:14px; background:var(--red-soft);
+    display:flex; align-items:center; justify-content:center; margin:0 auto 18px;
+    font-size:22px;
+  }
+  .access-title{ font-family:'Manrope',sans-serif; font-weight:800; font-size:20px; color:var(--navy); margin:0 0 10px; }
+  .access-sub{ font-size:13.5px; color:var(--text-muted); line-height:1.6; margin-bottom:6px; }
+  .access-role{
+    display:inline-block; font-family:'JetBrains Mono',monospace; font-size:12px;
+    font-weight:700; background:var(--blue-soft); color:var(--blue);
+    padding:3px 10px; border-radius:5px; margin:10px 0 20px;
+  }
+  .access-user{ font-size:12px; color:var(--text-faint); margin-bottom:22px; font-family:'JetBrains Mono',monospace; }
+  .access-actions{ display:flex; gap:10px; justify-content:center; }
+  .access-btn-primary{
+    padding:9px 20px; border:none; border-radius:8px; background:var(--navy);
+    color:#fff; font-size:13px; font-weight:600; cursor:pointer;
+  }
+  .access-btn-primary:hover{ background:#1a3a5c; }
+  .access-btn-ghost{
+    padding:9px 20px; border:1px solid var(--border); border-radius:8px;
+    background:var(--card); color:var(--text-muted); font-size:13px; cursor:pointer;
+    text-decoration:none; display:flex; align-items:center;
+  }
+  .access-btn-ghost:hover{ background:var(--slate-soft); }
+  .pill{
+    font-family:'JetBrains Mono',monospace; font-size:10.5px; font-weight:600;
+    padding:2px 7px; border-radius:12px;
+  }
+  .pill-blue{ background:var(--blue-soft); color:var(--blue); }
+  .pill-teal{ background:var(--teal-soft); color:var(--teal); }
+  .pill-green{ background:var(--green-soft); color:var(--green); }
+  .pill-amber{ background:var(--amber-soft); color:var(--amber); }
+  .pill-red{ background:var(--red-soft); color:var(--red); }
+  .pill-slate{ background:var(--slate-soft); color:var(--text-faint); }
+
+  /* ---- Weekly Plan edit mode ---- */
+  .wp-edit-btn{ font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; padding:5px 13px; border-radius:5px; cursor:pointer; background:var(--navy); color:#fff; border:none; }
+  .wp-edit-btn:hover{ background:#1a3a5c; }
+  .wp-save-btn{ font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; padding:5px 13px; border-radius:5px; cursor:pointer; background:var(--green); color:#fff; border:none; }
+  .wp-save-btn:hover{ filter:brightness(1.08); }
+  .wp-cancel-btn{ font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600; padding:5px 11px; border-radius:5px; cursor:pointer; background:var(--card); color:var(--text-muted); border:1px solid var(--border); }
+  .wp-cancel-btn:hover{ background:var(--slate-soft); }
+
+  .wp-focus{ background:var(--blue-soft); border-left:3px solid var(--blue); padding:10px 14px; margin:12px 14px 0; border-radius:0 6px 6px 0; font-size:13px; color:var(--navy); line-height:1.55; }
+  .wp-focus-edit{ padding:12px 14px; border-bottom:1px solid var(--border-soft); background:var(--slate-soft); }
+  .wp-focus-label{ display:block; font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; color:var(--text-faint); letter-spacing:.06em; margin-bottom:5px; }
+  .wp-focus-textarea{ width:100%; box-sizing:border-box; resize:vertical; min-height:52px; padding:8px 10px; border:1px solid var(--border); border-radius:6px; font-family:inherit; font-size:13px; color:var(--text); background:var(--card); }
+  .wp-focus-textarea:focus{ outline:none; border-color:var(--blue); }
+
+  .wp-item-hidden{ opacity:.3; text-decoration:line-through; }
+  .wp-hide-btn{ border:none; background:none; cursor:pointer; padding:2px 6px; border-radius:4px; font-size:13px; color:var(--text-faint); flex-shrink:0; line-height:1; }
+  .wp-hide-btn:hover{ background:var(--amber-soft); }
+  .wp-del-btn{ border:none; background:none; cursor:pointer; padding:2px 6px; border-radius:4px; font-size:11px; color:var(--text-faint); flex-shrink:0; }
+  .wp-del-btn:hover{ background:var(--red-soft); color:var(--red); }
+
+  .wp-custom-item{ display:flex; align-items:center; gap:8px; background:var(--slate-soft); border-radius:6px; padding:7px 10px; margin:3px 0; }
+  .wp-custom-dot{ width:5px; height:5px; border-radius:50%; background:var(--text-faint); flex-shrink:0; }
+  .wp-custom-text{ font-size:13px; color:var(--text); flex:1; line-height:1.4; }
+  .wp-custom-badge{ font-family:'JetBrains Mono',monospace; font-size:9px; color:var(--text-faint); flex-shrink:0; background:var(--border); padding:1px 5px; border-radius:3px; }
+
+  .wp-add-row{ display:flex; gap:6px; padding:6px 0 2px; }
+  .wp-add-input{ flex:1; padding:6px 10px; border:1px dashed var(--border); border-radius:5px; font-size:13px; font-family:inherit; color:var(--text); background:var(--bg); }
+  .wp-add-input:focus{ outline:none; border-color:var(--blue); border-style:solid; background:var(--card); }
+  .wp-add-input::placeholder{ color:var(--text-faint); }
+  .wp-add-btn-sm{ padding:6px 12px; border:none; border-radius:5px; background:var(--navy); color:#fff; font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap; }
+  .wp-add-btn-sm:hover{ background:#1a3a5c; }
+
+  .wp-edit-banner{ background:var(--amber-soft); border-bottom:1px solid var(--amber); padding:8px 14px; font-size:12px; color:var(--amber); font-family:'JetBrains Mono',monospace; display:flex; align-items:center; gap:6px; }
+
+  /* ---- Task detail dialog ---- */
+  .td-overlay{ position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:300; display:flex; align-items:center; justify-content:center; padding:20px; }
+  .td-box{ background:var(--card); border-radius:12px; box-shadow:0 20px 60px rgba(0,0,0,.25); width:100%; max-width:520px; overflow:hidden; }
+  .td-head{ padding:16px 20px 12px; border-bottom:1px solid var(--border); display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+  .td-head-left{ flex:1; min-width:0; }
+  .td-chips{ display:flex; align-items:center; gap:6px; margin-bottom:6px; flex-wrap:wrap; }
+  .td-title{ font-size:15px; font-weight:700; color:var(--navy); line-height:1.35; }
+  .td-module{ font-size:12px; color:var(--text-muted); margin-top:3px; }
+  .td-close{ border:none; background:none; font-size:18px; color:var(--text-faint); cursor:pointer; padding:2px 5px; line-height:1; border-radius:4px; flex-shrink:0; }
+  .td-close:hover{ background:var(--red-soft); color:var(--red); }
+  .td-body{ padding:16px 20px; display:flex; flex-direction:column; gap:14px; }
+  .td-field{ display:flex; flex-direction:column; gap:4px; }
+  .td-label{ font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; color:var(--text-faint); letter-spacing:.05em; }
+  .td-value{ font-size:13.5px; color:var(--text); line-height:1.5; }
+  .td-value.overdue{ color:var(--red); }
+  .td-desc{ font-size:13px; color:var(--text-muted); line-height:1.6; background:var(--slate-soft); padding:10px 12px; border-radius:6px; max-height:200px; overflow-y:auto; }
+  .td-desc p{ margin:0 0 8px; } .td-desc p:last-child{ margin-bottom:0; }
+  .td-desc ul,.td-desc ol{ margin:0 0 8px; padding-left:20px; }
+  .td-desc li{ margin-bottom:3px; }
+  .td-desc strong,.td-desc b{ font-weight:700; color:var(--text); }
+  .td-desc em,.td-desc i{ font-style:italic; }
+  .td-desc h1,.td-desc h2,.td-desc h3{ font-size:13px; font-weight:700; color:var(--navy); margin:8px 0 4px; }
+  .td-desc a{ color:var(--blue); text-decoration:underline; }
+  .td-desc br{ display:block; margin-bottom:4px; }
+  .td-dates{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+  /* ---- Weekly Plan filter bar ---- */
+  .wp-filter-bar{ display:flex; gap:6px; padding:9px 14px; border-bottom:1px solid var(--border-soft); background:var(--bg); flex-wrap:wrap; }
+  .wp-filter-btn{ font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:600; padding:4px 14px; border-radius:20px; cursor:pointer; background:none; border:1px solid var(--border); color:var(--text-muted); transition:all .12s; }
+  .wp-filter-btn:hover{ border-color:var(--blue); color:var(--blue); }
+  .wp-filter-btn.active{ background:var(--navy); color:#fff; border-color:var(--navy); }
+  .wp-filter-btn[data-filter="HR"].active{ background:var(--blue); border-color:var(--blue); }
+  .wp-filter-btn[data-filter="Tender"].active{ background:var(--green); border-color:var(--green); }
+
+  /* View button on task items */
+  .wp-view-btn{ font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:600; padding:3px 9px; border-radius:4px; cursor:pointer; background:var(--blue-soft); color:var(--blue); border:1px solid currentColor; flex-shrink:0; align-self:flex-start; margin-top:1px; }
+  .wp-view-btn:hover{ background:var(--blue); color:#fff; }
+
+  @media(max-width:700px){ .kpis{ grid-template-columns:repeat(2,1fr); } .view-tab{ padding:9px 12px; font-size:11px; } }
+</style>
+</head>
+<body>
+
+<!-- Login screen -->
+<div class="login-screen" id="loginScreen">
+  <form class="login-card" id="loginForm">
+    <div class="login-eyebrow">Pioneer Foundation Engineering · Project Lead View</div>
+    <h2 class="login-title">Sign in with your ERPNext account</h2>
+    <div class="login-sub">This view is for internal project tracking. Sign in with your Frappe credentials.</div>
+    <label class="login-label" for="loginUsr">Username or email</label>
+    <input class="login-input" id="loginUsr" name="usr" type="text" autocomplete="username" required>
+    <label class="login-label" for="loginPwd">Password</label>
+    <input class="login-input" id="loginPwd" name="pwd" type="password" autocomplete="current-password" required>
+    <div class="login-error" id="loginError"></div>
+    <button class="login-submit" id="loginSubmit" type="submit">Sign in</button>
+  </form>
+</div>
+
+<!-- Access denied screen — shown when user is logged in but lacks the required role -->
+<div class="access-screen" id="accessScreen">
+  <div class="access-card">
+    <div class="access-icon">🔒</div>
+    <h2 class="access-title">Access Restricted</h2>
+    <p class="access-sub">This dashboard is for internal project leads only. Your ERPNext account does not have the required role.</p>
+    <div class="access-role" id="accessRoleLabel">Akhilam Lead</div>
+    <p class="access-user" id="accessUserLabel"></p>
+    <p class="access-sub" style="font-size:12.5px;">Contact your system administrator to request access.</p>
+    <div class="access-actions">
+      <button class="access-btn-primary" id="accessLogout">Sign out</button>
+    </div>
+  </div>
+</div>
+
+<!-- Dashboard -->
+<div id="dashboardWrap" style="display:none;">
+
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-logo">Pioneer <span>ERP</span></div>
+      <div class="topbar-badge">PROJECT LEAD</div>
+    </div>
+    <div class="topbar-right">
+      <span class="topbar-stamp" id="topbarStamp">—</span>
+      <a class="btn-ghost" href="/">← Client View</a>
+      <button class="btn-ghost" id="logoutBtn" type="button">Sign out</button>
+    </div>
+  </div>
+
+  <div class="page">
+
+    <!-- KPI strip -->
+    <div class="kpis" id="kpiStrip">
+      <div class="kpi"><div class="kpi-label">Total FRs</div><div class="kpi-val" id="kTotal">—</div><div class="kpi-foot" id="kTotalFoot">—</div></div>
+      <div class="kpi green"><div class="kpi-label">Completed</div><div class="kpi-val" id="kDone">—<span>FRs</span></div><div class="kpi-foot" id="kDoneFoot">—</div></div>
+      <div class="kpi amber"><div class="kpi-label">In Progress</div><div class="kpi-val" id="kProg">—<span>FRs</span></div><div class="kpi-foot">Working · Review · Rework</div></div>
+      <div class="kpi red"><div class="kpi-label">Open / Pending</div><div class="kpi-val" id="kOpen">—<span>FRs</span></div><div class="kpi-foot">Not yet started</div></div>
+      <div class="kpi purple"><div class="kpi-label">Active This Week</div><div class="kpi-val" id="kActive">—<span>tasks</span></div><div class="kpi-foot">Based on timesheets</div></div>
+    </div>
+
+    <!-- View tab bar -->
+    <div class="view-tabs">
+      <div class="view-tab active" data-panel="panel-timeline">
+        <div class="view-tab-dot" style="background:var(--blue)"></div>
+        TIMELINE
+      </div>
+      <div class="view-tab" data-panel="panel-activity">
+        <div class="view-tab-dot" style="background:var(--teal)"></div>
+        ACTIVITY LOG
+      </div>
+      <div class="view-tab" data-panel="panel-weekly">
+        <div class="view-tab-dot" style="background:var(--amber)"></div>
+        WEEKLY PLAN
+      </div>
+    </div>
+
+    <!-- Tab panel: Timeline (Gantt) -->
+    <div class="tab-panel active" id="panel-timeline">
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Module Timeline</div>
+            <div class="card-sub">Planned start → end per module and FR · Click a module to expand FR bars · Dashed bar = dates inferred from FRs</div>
+          </div>
+          <div class="card-actions">
+            <button class="btn-gantt-toggle" id="ganttExpandAll">Expand All</button>
+            <span class="pill pill-blue" id="ganttDateRange">—</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div id="ganttContainer"><div class="g-no-dates">Loading timeline…</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab panel: Activity Log -->
+    <div class="tab-panel" id="panel-activity">
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Weekly Activity Log</div>
+            <div class="card-sub" id="activityWeekLabel">Who worked on which task this week</div>
+          </div>
+          <div class="card-actions">
+            <span class="pill pill-slate" id="activityCount">0 entries</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <table class="act-table" id="activityTable">
+            <thead>
+              <tr>
+                <th style="width:80px;">Date</th>
+                <th style="width:140px;">Consultant</th>
+                <th>Task</th>
+                <th style="width:100px;">Module</th>
+                <th style="width:54px;">Hrs</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody id="activityBody">
+              <tr><td colspan="6" class="act-empty">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab panel: Weekly Plan -->
+    <div class="tab-panel" id="panel-weekly">
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Weekly Plan</div>
+            <div class="card-sub">Mon 11:00 AM meeting agenda — pending tasks, action items, demo candidates</div>
+          </div>
+          <div class="card-actions" id="wpCardActions">
+            <span class="week-badge" id="weekLabel">Week —</span>
+            <span id="wpBtnArea"></span>
+          </div>
+        </div>
+        <div class="wp-filter-bar" id="wpFilterBar">
+          <button class="wp-filter-btn active" data-filter="all">All Modules</button>
+          <button class="wp-filter-btn" data-filter="HR">HR</button>
+          <button class="wp-filter-btn" data-filter="Tender">Tender</button>
+        </div>
+        <div class="card-body" id="weeklyPlanBody">
+          <div class="agenda-section">
+            <div class="empty-msg">Loading…</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /page -->
+</div><!-- /dashboardWrap -->
+
+<script>
+// ---- utility ----
+function esc(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+function fmtDate(d){ if(!d) return '—'; const p=d.split('-'); return `${p[2]}/${p[1]}/${String(p[0]).slice(2)}`; }
+function dayName(dateStr){ if(!dateStr) return '—'; return new Date(dateStr+'T00:00:00').toLocaleDateString('en-IN',{weekday:'short'}); }
+
+const STATUS_ORDER = { Working:0,'Pending Review':1,Rework:2,Overdue:3,Open:4 };
+
+function chipClass(status){
+  if(status==='Working') return 'chip-working';
+  if(status==='Pending Review') return 'chip-review';
+  if(status==='Rework') return 'chip-rework';
+  if(status==='Overdue') return 'chip-overdue';
+  return 'chip-open';
+}
+function dotClass(status){
+  return status.toLowerCase().replace(/\s+/g,'-');
+}
+
+// ---- Gantt ----
+function buildGantt(data) {
+  // Collect date range across all modules and FRs
+  let minD = null, maxD = null;
+  function upd(d){
+    if(!d) return;
+    if(!minD||d<minD) minD=d;
+    if(!maxD||d>maxD) maxD=d;
+  }
+  const allMods = [...data.hr.modules, ...data.tender.modules];
+  allMods.forEach(m=>{ upd(m.start); upd(m.end); m.frs.forEach(fr=>{ upd(fr.start); upd(fr.end); }); });
+  upd(data.hr.rootStart); upd(data.hr.rootEnd);
+  upd(data.tender.rootStart); upd(data.tender.rootEnd);
+
+  const today = new Date().toISOString().slice(0,10);
+
+  if(!minD && !maxD){
+    return `<div class="g-no-dates">No Expected Start/End dates are set on tasks in ERPNext yet.<br>Add dates to see the Gantt timeline here.</div>`;
+  }
+
+  if(!minD) minD=today;
+  if(!maxD){ const d=new Date(minD); d.setMonth(d.getMonth()+6); maxD=d.toISOString().slice(0,10); }
+  if(today<minD) minD=today;
+  if(today>maxD){ const d=new Date(maxD); d.setDate(d.getDate()+30); maxD=d.toISOString().slice(0,10); }
+
+  const T0 = new Date(minD).getTime();
+  const T1 = new Date(maxD).getTime() + 86400000;
+  const span = T1 - T0;
+
+  document.getElementById('ganttDateRange').textContent = `${fmtDate(minD)} → ${fmtDate(maxD)}`;
+
+  function pct(dateStr){
+    if(!dateStr) return null;
+    return Math.max(0, Math.min(100, (new Date(dateStr).getTime()-T0)/span*100));
+  }
+
+  const todayPct = pct(today);
+  const todayPin = (p) => `<div class="g-today" style="left:${p.toFixed(2)}%" title="Today: ${today}"></div>`;
+
+  // Week header cells (Mon–Sun, labelled "Jul W1", "Aug W3", …)
+  const MSHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const weeks = [];
+  const cur = new Date(minD+'T00:00:00');
+  const dow = cur.getDay();
+  cur.setDate(cur.getDate() + (dow===0 ? -6 : 1-dow)); // rewind to Monday
+  const endD = new Date(maxD+'T00:00:00'); endD.setDate(endD.getDate()+8);
+  while(cur<=endD){
+    const wS = cur.getTime();
+    const wE = wS + 7*86400000 - 1;
+    const l = Math.max(0,(Math.max(wS,T0)-T0)/span*100);
+    const r = Math.min(100,(Math.min(wE,T1)-T0)/span*100);
+    const w = r-l;
+    if(w>0.1) weeks.push({ label:`${MSHORT[cur.getMonth()]} W${Math.ceil(cur.getDate()/7)}`, left:l.toFixed(2), width:w.toFixed(2) });
+    cur.setDate(cur.getDate()+7);
+  }
+
+  const monthsHtml = weeks.map(w=>`<div class="g-month" style="left:${w.left}%;width:${w.width}%">${w.label}</div>`).join('');
+
+  function barHtml(start, end, barClass, label=''){
+    if(!start||!end) return '';
+    const l=pct(start), r=pct(end);
+    if(l===null||r===null) return '';
+    const w=Math.max(0.5,r-l);
+    const lbl = label ? `<div class="g-bar-label">${esc(label)}</div>` : '';
+    return `<div class="g-bar ${barClass}" style="left:${l.toFixed(2)}%;width:${w.toFixed(2)}%" title="${label}">${lbl}</div>`;
+  }
+
+  let html = `<div class="gantt-wrap"><div class="gantt-inner">`;
+
+  // Header row (month ticks)
+  html += `<div class="gantt-row">
+    <div class="g-label g-section" style="height:30px;"></div>
+    <div class="g-chart g-header-chart" style="height:30px;">${monthsHtml}${todayPin(todayPct)}</div>
+  </div>`;
+
+  // Sections
+  [
+    { group: data.hr, key: 'hr', badge: 'HR' },
+    { group: data.tender, key: 'tender', badge: 'TN' },
+  ].forEach(({ group, key, badge }) => {
+    // Section header
+    html += `<div class="gantt-row g-section">
+      <div class="g-label g-section"><span class="pill pill-${key==='hr'?'blue':'teal'}">${badge}</span> ${esc(group.label)}</div>
+      <div class="g-chart g-section">${todayPin(todayPct)}</div>
+    </div>`;
+
+    group.modules.forEach((mod, mi) => {
+      const lead = mod.assignments[0] || '—';
+      const leadChip = mod.assignments.length ? `<span class="g-lead-chip ${key}">${esc(lead.split(' ')[0])}</span>` : '';
+      const done = `${mod.completedFrs}/${mod.totalFrs}`;
+
+      // Derive module timeline from FR dates when the module task itself has no dates
+      const frStarts = mod.frs.map(f=>f.start).filter(Boolean).sort();
+      const frEnds   = mod.frs.map(f=>f.end).filter(Boolean).sort();
+      const effStart = mod.start || (frStarts.length ? frStarts[0] : null);
+      const effEnd   = mod.end   || (frEnds.length   ? frEnds[frEnds.length-1] : null);
+      const isDerived = !mod.start || !mod.end; // at least one date came from FRs
+      const modBarClass = `${key}${isDerived ? ' derived' : ''}`;
+      const modDateLabel = `${mod.name} · ${fmtDate(effStart)} → ${fmtDate(effEnd)}${isDerived ? ' (inferred from FRs)' : ''}`;
+
+      // Only show chevron when there are FRs to expand
+      const hasChildren = mod.frs.length > 0;
+
+      // Module row
+      html += `<div class="gantt-row g-row-module" id="gmod-${key}-${mi}">
+        <div class="g-label g-module" data-mod="${key}:${mi}" style="${!hasChildren ? 'cursor:default;' : ''}">
+          <span class="g-chevron" style="${!hasChildren ? 'visibility:hidden;' : ''}"">▶</span>
+          <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(mod.name)}">${esc(mod.name)}</span>
+          ${leadChip}
+          <span style="font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--text-faint);">${done}</span>
+        </div>
+        <div class="g-chart">
+          ${todayPin(todayPct)}
+          ${barHtml(effStart, effEnd, modBarClass, modDateLabel)}
+        </div>
+      </div>`;
+
+      // FR rows (hidden by default)
+      mod.frs.forEach((fr) => {
+        const frBarClass = `fr-${fr.status.toLowerCase().replace(/\s+/g,'-')}`;
+        html += `<div class="gantt-row g-fr hidden" data-parent="${key}:${mi}">
+          <div class="g-label g-fr-label">
+            <span class="g-fr-code" style="font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:700;color:var(--navy);flex-shrink:0;">${esc(fr.id)}</span>
+            <span style="font-size:11.5px;color:var(--text-muted);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(fr.title)}">${esc(fr.title)}</span>
+            <span class="status-chip ${chipClass(fr.status)}" style="flex-shrink:0;">${esc(fr.status)}</span>
+          </div>
+          <div class="g-chart">
+            ${todayPin(todayPct)}
+            ${barHtml(fr.start, fr.end, frBarClass, `${fr.id}: ${fr.title} · ${fmtDate(fr.start)} → ${fmtDate(fr.end)}`)}
+          </div>
+        </div>`;
+      });
+    });
+  });
+
+  html += `</div></div>`;
+  return html;
+}
+
+// ---- Activity log ----
+function renderActivity(activity) {
+  const tbody = document.getElementById('activityBody');
+  document.getElementById('activityCount').textContent = `${activity.length} entries`;
+
+  if(activity.length === 0){
+    tbody.innerHTML = `<tr><td colspan="6" class="act-empty">No timesheet entries found for this week in ERPNext.</td></tr>`;
+    return;
+  }
+
+  const rows = activity.map(row => {
+    const isToday = row.date === new Date().toISOString().slice(0,10);
+    const bg = isToday ? 'background:#FFFBEB;' : '';
+    return `<tr style="${bg}">
+      <td class="act-date">
+        <span class="act-day">${dayName(row.date)}</span>
+        ${fmtDate(row.date)}
+      </td>
+      <td>
+        <div class="act-consultant">${esc(row.consultant)}</div>
+        ${row.activity ? `<div class="act-role">${esc(row.activity)}</div>` : ''}
+      </td>
+      <td>
+        <div class="act-code">${esc(row.taskCode||row.taskId)}</div>
+        <div class="act-title">${esc(row.taskTitle||'')}</div>
+      </td>
+      <td>
+        <div class="act-module">${esc(row.section)}</div>
+        <div class="act-module" style="font-size:10px;">${esc(row.module)}</div>
+      </td>
+      <td class="act-hours">${row.hours.toFixed(1)}</td>
+      <td class="act-remarks">${esc(row.remarks||'—')}</td>
+    </tr>`;
+  }).join('');
+
+  tbody.innerHTML = rows;
+}
+
+// ---- Weekly plan sidebar ----
+// ---- Weekly Plan – localStorage helpers ----
+function weekKey() {
+  const { start } = weekRange();
+  return 'pioneer-lead-plan-' + start.toISOString().slice(0, 10);
+}
+function defaultPlan() {
+  return { focusNote: '', customItems: { 'in-progress': [], 'pending': [], 'action-items': [], 'demo': [] }, hiddenIds: [] };
+}
+function loadPlan() {
+  try {
+    const raw = localStorage.getItem(weekKey());
+    if (!raw) return defaultPlan();
+    const p = JSON.parse(raw);
+    const def = defaultPlan();
+    p.customItems = Object.assign({}, def.customItems, p.customItems || {});
+    p.hiddenIds = p.hiddenIds || [];
+    p.focusNote = p.focusNote || '';
+    return p;
+  } catch (_) { return defaultPlan(); }
+}
+function savePlan(plan) {
+  try { localStorage.setItem(weekKey(), JSON.stringify(plan)); } catch (_) {}
+}
+
+let _wpTasks = null, _wpData = null, _wpTaskCache = {}, _wpFilter = 'all';
+
+function computeErpSections(weeklyTasks, data) {
+  const { start, end } = weekRange();
+  const wStart = start.toISOString().slice(0, 10);
+  const wEnd   = end.toISOString().slice(0, 10);
+  function inThisWeek(t) {
+    return (t.startDate && t.startDate >= wStart && t.startDate <= wEnd) ||
+           (t.dueDate   && t.dueDate   >= wStart && t.dueDate   <= wEnd);
+  }
+  const sectionFiltered = _wpFilter === 'all' ? weeklyTasks : weeklyTasks.filter(t => t.section === _wpFilter);
+  const thisWeekTasks = sectionFiltered.filter(inThisWeek);
+  const inProgress = thisWeekTasks.filter(t => ['Working','Pending Review','Rework'].includes(t.status));
+  const pending    = thisWeekTasks.filter(t => ['Open','Overdue'].includes(t.status));
+  const hrMods     = _wpFilter === 'Tender' ? [] : data.hr.modules;
+  const tenderMods = _wpFilter === 'HR'     ? [] : data.tender.modules;
+  const allOi = [];
+  [...hrMods, ...tenderMods].forEach(m => {
+    m.moduleOi.forEach(oi => allOi.push({ ...oi, module: m.name }));
+    m.frs.forEach(fr => fr.oi.forEach(oi => allOi.push({ ...oi, module: `${m.name} / ${fr.id}` })));
+  });
+  const nearComplete = [...hrMods, ...tenderMods].filter(m => {
+    if (!m.totalFrs) return false;
+    const pct = m.completedFrs / m.totalFrs * 100;
+    return pct >= 80 && pct < 100;
+  });
+  return { inProgress, pending, allOi, nearComplete };
+}
+
+function renderWeeklyPlan(weeklyTasks, data) {
+  _wpTasks = weeklyTasks;
+  _wpData = data;
+  _wpTaskCache = {};
+  weeklyTasks.forEach(t => { _wpTaskCache[t.id] = t; });
+
+  const { start, end } = weekRange();
+  document.getElementById('weekLabel').textContent = `${fmtDate(start.toISOString().slice(0,10))} – ${fmtDate(end.toISOString().slice(0,10))}`;
+  document.getElementById('activityWeekLabel').textContent = `Who worked on which task · Week of ${fmtDate(start.toISOString().slice(0,10))}`;
+
+  document.getElementById('wpBtnArea').innerHTML = '<button class="wp-edit-btn" id="btnEditPlan">✎ Edit Plan</button>';
+  document.getElementById('btnEditPlan').addEventListener('click', showEditMode);
+
+  // Sync filter pills with current state and wire click handlers
+  document.querySelectorAll('[data-filter]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.filter === _wpFilter);
+    btn.onclick = () => {
+      _wpFilter = btn.dataset.filter;
+      document.querySelectorAll('[data-filter]').forEach(b =>
+        b.classList.toggle('active', b.dataset.filter === _wpFilter));
+      renderWeeklyPlanView(loadPlan());
+    };
+  });
+
+  renderWeeklyPlanView(loadPlan());
+}
+
+function renderWeeklyPlanView(plan) {
+  const { inProgress, pending, allOi, nearComplete } = computeErpSections(_wpTasks, _wpData);
+  const hidden = new Set(plan.hiddenIds || []);
+  const today = new Date().toISOString().slice(0, 10);
+
+  function taskItemHtml(t) {
+    if (hidden.has(t.id)) return '';
+    const isOverdue = t.dueDate && t.dueDate < today;
+    const assigns = t.assignments && t.assignments.length ? t.assignments.slice(0,2).join(', ') : null;
+    return `<div class="task-item">
+      <div class="task-row" style="align-items:flex-start;">
+        <div class="task-status-dot ${dotClass(t.status)}" style="margin-top:3px;"></div>
+        <div class="task-content" style="flex:1;">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span class="task-id">${esc(t.id)}</span>
+            <span class="status-chip ${chipClass(t.status)}">${esc(t.status)}</span>
+          </div>
+          <div class="task-name" title="${esc(t.title)}">${esc(t.title)}</div>
+          <div class="task-meta">
+            <span class="sect-badge ${t.section==='HR'?'sb-hr':'sb-tender'}">${esc(t.section)}</span>
+            <span class="task-module">${esc(t.module)}</span>
+            ${t.dueDate ? `<span class="task-due${isOverdue?' overdue':''}">Due ${fmtDate(t.dueDate)}</span>` : ''}
+            ${assigns ? `<span class="task-assign">👤 ${esc(assigns)}</span>` : ''}
+            ${t.oiCount > 0 ? `<span style="font-size:10px;color:var(--red);font-family:'JetBrains Mono',monospace;">${t.oiCount} OI</span>` : ''}
+          </div>
+        </div>
+        <button class="wp-view-btn" data-view-task="${esc(t.id)}">View</button>
+      </div>
+    </div>`;
+  }
+
+  function customHtml(sectionId) {
+    return (plan.customItems[sectionId] || []).map(item =>
+      `<div class="wp-custom-item">
+        <div class="wp-custom-dot"></div>
+        <span class="wp-custom-text">${esc(item.text)}</span>
+        <span class="wp-custom-badge">Note</span>
+      </div>`
+    ).join('');
+  }
+
+  const visIp   = inProgress.filter(t => !hidden.has(t.id));
+  const visPend = pending.filter(t => !hidden.has(t.id));
+  const visOi   = allOi.filter(oi => !hidden.has(oi.id));
+
+  let html = '';
+
+  if (plan.focusNote) {
+    html += `<div class="wp-focus">${esc(plan.focusNote)}</div>`;
+  }
+
+  const ipCustom = customHtml('in-progress');
+  html += `<div class="agenda-section">
+    <div class="agenda-header"><div class="agenda-dot" style="background:var(--blue)"></div>In Progress (${visIp.length})</div>
+    ${visIp.map(taskItemHtml).join('')}${ipCustom}
+    ${!visIp.length && !ipCustom ? '<div class="empty-msg">No tasks currently in progress.</div>' : ''}
+  </div>`;
+
+  const pendCustom = customHtml('pending');
+  html += `<div class="agenda-section">
+    <div class="agenda-header"><div class="agenda-dot" style="background:var(--slate)"></div>Pending Tasks (${visPend.length})</div>
+    ${visPend.slice(0,8).map(taskItemHtml).join('')}${visPend.length>8?`<div class="empty-msg">+${visPend.length-8} more…</div>`:''}${pendCustom}
+    ${!visPend.length && !pendCustom ? '<div class="empty-msg">No open tasks.</div>' : ''}
+  </div>`;
+
+  const aiCustom = customHtml('action-items');
+  html += `<div class="agenda-section">
+    <div class="agenda-header"><div class="agenda-dot" style="background:var(--red)"></div>Open Items / Action Items (${visOi.length})</div>
+    ${visOi.slice(0,6).map(oi=>`
+      <div class="oi-item-side">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span class="oi-id-side">${esc(oi.id)}</span>
+          <span style="font-size:10px;color:var(--text-faint);font-family:'JetBrains Mono',monospace;">${esc(oi.module)}</span>
+        </div>
+        <div class="oi-desc-side">${esc(oi.desc)}</div>
+      </div>`).join('')}${visOi.length>6?`<div class="empty-msg">+${visOi.length-6} more…</div>`:''}${aiCustom}
+    ${!visOi.length && !aiCustom ? '<div class="empty-msg">No open items pending.</div>' : ''}
+  </div>`;
+
+  const demoCustom = customHtml('demo');
+  html += `<div class="agenda-section">
+    <div class="agenda-header"><div class="agenda-dot" style="background:var(--green)"></div>Plan Demo</div>
+    ${nearComplete.map(m=>`
+      <div class="task-item">
+        <div class="task-name">${esc(m.name)}</div>
+        <div class="task-meta">
+          <span style="font-size:11px;color:var(--green);font-weight:600;">${Math.round(m.completedFrs/m.totalFrs*100)}% complete</span>
+          <span class="task-module">${m.completedFrs}/${m.totalFrs} FRs done</span>
+        </div>
+      </div>`).join('')}${demoCustom}
+    ${!nearComplete.length && !demoCustom ? '<div class="empty-msg">No modules near completion yet.</div>' : ''}
+  </div>`;
+
+  document.getElementById('weeklyPlanBody').innerHTML = html;
+  document.querySelectorAll('#weeklyPlanBody [data-view-task]').forEach(btn => {
+    btn.addEventListener('click', () => showTaskDialog(btn.dataset.viewTask));
+  });
+}
+
+function showTaskDialog(taskId) {
+  const t = _wpTaskCache[taskId];
+  if (!t) return;
+  const today = new Date().toISOString().slice(0, 10);
+  const isOverdue = t.dueDate && t.dueDate < today;
+
+  const overlay = document.createElement('div');
+  overlay.className = 'td-overlay';
+  overlay.innerHTML = `
+    <div class="td-box" role="dialog" aria-modal="true">
+      <div class="td-head">
+        <div class="td-head-left">
+          <div class="td-chips">
+            <span class="task-id">${esc(t.id)}</span>
+            <span class="status-chip ${chipClass(t.status)}">${esc(t.status)}</span>
+            <span class="sect-badge ${t.section==='HR'?'sb-hr':'sb-tender'}">${esc(t.section)}</span>
+          </div>
+          <div class="td-title">${esc(t.title)}</div>
+          <div class="td-module">${esc(t.module)}</div>
+        </div>
+        <button class="td-close" id="tdClose" aria-label="Close">✕</button>
+      </div>
+      <div class="td-body">
+        ${t.description ? `<div class="td-field">
+          <span class="td-label">DESCRIPTION</span>
+          <div class="td-desc">${t.description}</div>
+        </div>` : ''}
+        <div class="td-dates">
+          <div class="td-field">
+            <span class="td-label">START DATE</span>
+            <div class="td-value">${t.startDate ? fmtDate(t.startDate) : '—'}</div>
+          </div>
+          <div class="td-field">
+            <span class="td-label">END DATE</span>
+            <div class="td-value${isOverdue ? ' overdue' : ''}">${t.dueDate ? fmtDate(t.dueDate) : '—'}</div>
+          </div>
+        </div>
+        ${t.assignments && t.assignments.length ? `<div class="td-field">
+          <span class="td-label">ASSIGNED TO</span>
+          <div class="td-value">${t.assignments.map(a => esc(a)).join(', ')}</div>
+        </div>` : ''}
+        ${t.oiCount > 0 ? `<div class="td-field">
+          <span class="td-label">OPEN ITEMS</span>
+          <div class="td-value" style="color:var(--red);">${t.oiCount} action item${t.oiCount > 1 ? 's' : ''} pending</div>
+        </div>` : ''}
+      </div>
+    </div>`;
+
+  document.body.appendChild(overlay);
+  function close() { overlay.remove(); }
+  overlay.querySelector('#tdClose').addEventListener('click', close);
+  overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+  document.addEventListener('keydown', function kh(e) {
+    if (e.key === 'Escape') { close(); document.removeEventListener('keydown', kh); }
+  });
+}
+
+function showEditMode() {
+  const plan = loadPlan();
+  const { inProgress, pending, allOi, nearComplete } = computeErpSections(_wpTasks, _wpData);
+
+  document.getElementById('wpBtnArea').innerHTML =
+    '<button class="wp-save-btn" id="btnSavePlan">Save</button>' +
+    '<button class="wp-cancel-btn" id="btnCancelPlan">Cancel</button>';
+  document.getElementById('btnSavePlan').addEventListener('click', doSave);
+  document.getElementById('btnCancelPlan').addEventListener('click', doCancel);
+
+  function eyeBtn(id) {
+    const isHid = plan.hiddenIds.includes(id);
+    return `<button class="wp-hide-btn" data-toggle="${esc(id)}" title="${isHid?'Show':'Hide'}">${isHid?'🚫':'👁'}</button>`;
+  }
+
+  function erpTaskEdit(t) {
+    const isHid = plan.hiddenIds.includes(t.id);
+    return `<div class="task-item${isHid?' wp-item-hidden':''}" data-erp-item="${esc(t.id)}">
+      <div class="task-row" style="align-items:center;">
+        <div class="task-status-dot ${dotClass(t.status)}"></div>
+        <div class="task-content" style="flex:1;">
+          <span class="task-id">${esc(t.id)}</span>
+          <span class="task-name" style="display:inline;margin-left:6px;">${esc(t.title)}</span>
+        </div>
+        ${eyeBtn(t.id)}
+      </div>
+    </div>`;
+  }
+
+  function erpOiEdit(oi) {
+    const isHid = plan.hiddenIds.includes(oi.id);
+    return `<div class="oi-item-side${isHid?' wp-item-hidden':''}" data-erp-item="${esc(oi.id)}" style="display:flex;align-items:center;">
+      <div style="flex:1;">
+        <span class="oi-id-side">${esc(oi.id)}</span>
+        <span style="font-size:10px;color:var(--text-faint);font-family:'JetBrains Mono',monospace;margin-left:6px;">${esc(oi.module)}</span>
+        <div class="oi-desc-side">${esc(oi.desc)}</div>
+      </div>
+      ${eyeBtn(oi.id)}
+    </div>`;
+  }
+
+  function customItemsEdit(sectionId) {
+    return (plan.customItems[sectionId] || []).map(item =>
+      `<div class="wp-custom-item" data-custom-id="${esc(item.id)}" data-section="${esc(sectionId)}">
+        <div class="wp-custom-dot"></div>
+        <span class="wp-custom-text">${esc(item.text)}</span>
+        <button class="wp-del-btn" data-del="${esc(item.id)}" data-del-sec="${esc(sectionId)}" title="Remove">✕</button>
+      </div>`
+    ).join('');
+  }
+
+  function addRow(sectionId) {
+    return `<div class="wp-add-row">
+      <input class="wp-add-input" data-add-sec="${esc(sectionId)}" type="text" placeholder="Add a note or action item…" maxlength="200">
+      <button class="wp-add-btn-sm" data-add-btn="${esc(sectionId)}">+ Add</button>
+    </div>`;
+  }
+
+  let html = `<div class="wp-edit-banner">✏ Edit mode — toggle 👁 to hide ERP items, add your own notes below each section. Save when done.</div>`;
+
+  html += `<div class="wp-focus-edit">
+    <label class="wp-focus-label">WEEK FOCUS / AGENDA NOTE (optional)</label>
+    <textarea class="wp-focus-textarea" id="wpFocusInput" maxlength="400" placeholder="What's the main focus for this week's meeting?">${esc(plan.focusNote)}</textarea>
+  </div>`;
+
+  html += `<div class="agenda-section">
+    <div class="agenda-header"><div class="agenda-dot" style="background:var(--blue)"></div>In Progress</div>
+    ${inProgress.map(erpTaskEdit).join('')}${customItemsEdit('in-progress')}${addRow('in-progress')}
+  </div>`;
+
+  html += `<div class="agenda-section">
+    <div class="agenda-header"><div class="agenda-dot" style="background:var(--slate)"></div>Pending Tasks</div>
+    ${pending.map(erpTaskEdit).join('')}${customItemsEdit('pending')}${addRow('pending')}
+  </div>`;
+
+  html += `<div class="agenda-section">
+    <div class="agenda-header"><div class="agenda-dot" style="background:var(--red)"></div>Open Items / Action Items</div>
+    ${allOi.map(erpOiEdit).join('')}${customItemsEdit('action-items')}${addRow('action-items')}
+  </div>`;
+
+  html += `<div class="agenda-section">
+    <div class="agenda-header"><div class="agenda-dot" style="background:var(--green)"></div>Plan Demo</div>
+    ${nearComplete.map(m=>`<div class="task-item"><div class="task-name">${esc(m.name)}</div>
+      <div class="task-meta"><span style="font-size:11px;color:var(--green);font-weight:600;">${Math.round(m.completedFrs/m.totalFrs*100)}%</span>
+      <span class="task-module">${m.completedFrs}/${m.totalFrs} FRs</span></div></div>`).join('')}
+    ${customItemsEdit('demo')}${addRow('demo')}
+  </div>`;
+
+  document.getElementById('weeklyPlanBody').innerHTML = html;
+
+  // Toggle hide/show ERP items
+  document.querySelectorAll('[data-toggle]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.toggle;
+      const idx = plan.hiddenIds.indexOf(id);
+      if (idx >= 0) plan.hiddenIds.splice(idx, 1); else plan.hiddenIds.push(id);
+      const isHid = plan.hiddenIds.includes(id);
+      btn.closest('[data-erp-item]')?.classList.toggle('wp-item-hidden', isHid);
+      btn.textContent = isHid ? '🚫' : '👁';
+      btn.title = isHid ? 'Show' : 'Hide';
+    });
+  });
+
+  // Delete custom items
+  document.querySelectorAll('[data-del]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const sec = btn.dataset.delSec;
+      plan.customItems[sec] = (plan.customItems[sec] || []).filter(i => i.id !== btn.dataset.del);
+      btn.closest('[data-custom-id]')?.remove();
+    });
+  });
+
+  // Add custom items (button click or Enter key)
+  function addItem(sec) {
+    const input = document.querySelector(`[data-add-sec="${sec}"]`);
+    if (!input) return;
+    const text = input.value.trim();
+    if (!text) return;
+    const item = { id: String(Date.now()), text };
+    plan.customItems[sec] = plan.customItems[sec] || [];
+    plan.customItems[sec].push(item);
+    const el = document.createElement('div');
+    el.className = 'wp-custom-item';
+    el.dataset.customId = item.id;
+    el.dataset.section = sec;
+    el.innerHTML = `<div class="wp-custom-dot"></div>
+      <span class="wp-custom-text">${esc(item.text)}</span>
+      <button class="wp-del-btn" title="Remove">✕</button>`;
+    el.querySelector('.wp-del-btn').addEventListener('click', () => {
+      plan.customItems[sec] = plan.customItems[sec].filter(i => i.id !== item.id);
+      el.remove();
+    });
+    input.closest('.wp-add-row').before(el);
+    input.value = '';
+    input.focus();
+  }
+  document.querySelectorAll('[data-add-btn]').forEach(btn => {
+    btn.addEventListener('click', () => addItem(btn.dataset.addBtn));
+  });
+  document.querySelectorAll('[data-add-sec]').forEach(input => {
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addItem(input.dataset.addSec); } });
+  });
+
+  function doSave() {
+    plan.focusNote = (document.getElementById('wpFocusInput')?.value || '').trim();
+    savePlan(plan);
+    renderWeeklyPlan(_wpTasks, _wpData);
+  }
+  function doCancel() {
+    renderWeeklyPlan(_wpTasks, _wpData);
+  }
+}
+
+function weekRange(){
+  const now = new Date();
+  const day = now.getDay();
+  const diff = day===0?-6:1-day;
+  const monday = new Date(now); monday.setDate(now.getDate()+diff); monday.setHours(0,0,0,0);
+  const sunday = new Date(monday); sunday.setDate(monday.getDate()+6); sunday.setHours(23,59,59,999);
+  return { start: monday, end: sunday };
+}
+
+// ---- KPI strip ----
+function renderKpis(data, activity){
+  const allMods = [...data.hr.modules, ...data.tender.modules];
+  const totalFr = allMods.reduce((a,m)=>a+m.totalFrs,0);
+  const doneFr = allMods.reduce((a,m)=>a+m.completedFrs,0);
+  const progFr = allMods.reduce((a,m)=>a+m.inProgressFrs,0);
+  const openFr = totalFr - doneFr - progFr;
+  const hrFr = data.hr.modules.reduce((a,m)=>a+m.totalFrs,0);
+  const tFr = data.tender.modules.reduce((a,m)=>a+m.totalFrs,0);
+
+  document.getElementById('kTotal').innerHTML = `${totalFr}<span>FRs</span>`;
+  document.getElementById('kTotalFoot').textContent = `${hrFr} HR · ${tFr} Tender`;
+  document.getElementById('kDone').innerHTML = `${doneFr}<span>FRs</span>`;
+  document.getElementById('kDoneFoot').textContent = totalFr ? `${Math.round(doneFr/totalFr*100)}% complete` : '—';
+  document.getElementById('kProg').innerHTML = `${progFr}<span>FRs</span>`;
+  document.getElementById('kOpen').innerHTML = `${openFr}<span>FRs</span>`;
+  document.getElementById('kActive').innerHTML = `${activity.length}<span>tasks</span>`;
+}
+
+// ---- View tab switching ----
+function initViewTabs(){
+  document.querySelectorAll('.view-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.view-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      const panel = document.getElementById(tab.dataset.panel);
+      if (panel) panel.classList.add('active');
+    });
+  });
+}
+
+// ---- Gantt toggle handlers ----
+function setModuleExpanded(modKey, open) {
+  const row = document.getElementById(`gmod-${modKey.replace(':','-')}`);
+  if (!row) return;
+  row.classList.toggle('open', open);
+  document.querySelectorAll(`[data-parent="${modKey}"]`).forEach(fr => {
+    fr.classList.toggle('hidden', !open);
+  });
+}
+
+function attachGanttHandlers(){
+  // Per-module click toggle
+  document.querySelectorAll('[data-mod]').forEach(el => {
+    el.addEventListener('click', () => {
+      const key = el.dataset.mod;
+      const row = el.closest('.g-row-module');
+      if (!row) return;
+      const isOpen = row.classList.toggle('open');
+      document.querySelectorAll(`[data-parent="${key}"]`).forEach(fr => {
+        fr.classList.toggle('hidden', !isOpen);
+      });
+      // Keep expand-all button label in sync
+      syncExpandBtn();
+    });
+  });
+
+  // Expand / Collapse All button
+  const expandBtn = document.getElementById('ganttExpandAll');
+  if (expandBtn) {
+    expandBtn.addEventListener('click', () => {
+      const allModRows = document.querySelectorAll('.g-row-module');
+      // If any module is currently collapsed, expand all; otherwise collapse all
+      const anyCollapsed = [...allModRows].some(r => !r.classList.contains('open'));
+      allModRows.forEach(row => {
+        const modKey = row.querySelector('[data-mod]')?.dataset.mod;
+        if (modKey) setModuleExpanded(modKey, anyCollapsed);
+      });
+      syncExpandBtn();
+    });
+  }
+}
+
+function syncExpandBtn() {
+  const btn = document.getElementById('ganttExpandAll');
+  if (!btn) return;
+  const allModRows = document.querySelectorAll('.g-row-module');
+  const anyCollapsed = [...allModRows].some(r => !r.classList.contains('open'));
+  btn.textContent = anyCollapsed ? 'Expand All' : 'Collapse All';
+}
+
+// ---- main ----
+let data = null;
+
+function render(d){
+  data = d;
+  const stamp = d.generatedAt ? new Date(d.generatedAt) : new Date();
+  document.getElementById('topbarStamp').textContent =
+    'Updated ' + stamp.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+
+  renderKpis(d, d.weeklyActivity);
+
+  const ganttHtml = buildGantt(d);
+  document.getElementById('ganttContainer').innerHTML = ganttHtml;
+  attachGanttHandlers();
+
+  renderActivity(d.weeklyActivity);
+  renderWeeklyPlan(d.weeklyTasks, d);
+  initViewTabs();
+}
+
+// ---- auth ----
+const loginScreen = document.getElementById('loginScreen');
+const dashboardWrap = document.getElementById('dashboardWrap');
+const accessScreen = document.getElementById('accessScreen');
+
+function hideAll(){
+  loginScreen.style.display = 'none';
+  dashboardWrap.style.display = 'none';
+  accessScreen.classList.remove('visible');
+}
+function showLogin(msg){
+  hideAll();
+  document.getElementById('loginError').textContent = msg || '';
+  loginScreen.style.display = 'flex';
+}
+function showDashboard(){
+  hideAll();
+  dashboardWrap.style.display = '';
+}
+function showAccessDenied(errorMsg, requiredRole){
+  hideAll();
+  accessScreen.classList.add('visible');
+  if(requiredRole) document.getElementById('accessRoleLabel').textContent = requiredRole;
+  // Extract username from the error message if present (backend includes it)
+  const match = errorMsg && errorMsg.match(/\(([^)]+)\)/);
+  if(match) document.getElementById('accessUserLabel').textContent = `Signed in as: ${match[1]}`;
+}
+
+async function loadData(){
+  try {
+    const res = await fetch('/.netlify/functions/get-lead-data', { credentials: 'same-origin' });
+    if(res.status===401){ showLogin(); return; }
+    const live = await res.json().catch(()=>null);
+    if(res.status===403){
+      showAccessDenied(live&&live.error, live&&live.requiredRole);
+      return;
+    }
+    if(!res.ok){
+      const detail = live&&live.error ? live.error : `HTTP ${res.status}`;
+      const stage = live&&live.stage ? ` [${live.stage}]` : '';
+      showDashboard();
+      document.getElementById('ganttContainer').innerHTML = `<div class="g-no-dates">⚠ Could not load data: ${esc(detail+stage)}</div>`;
+      return;
+    }
+    showDashboard();
+    render(live);
+  } catch(err){
+    console.error('Load failed:', err);
+    showDashboard();
+    document.getElementById('ganttContainer').innerHTML = `<div class="g-no-dates">⚠ ${esc(err.message)}</div>`;
+  }
+}
+
+document.getElementById('loginForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const err = document.getElementById('loginError');
+  const btn = document.getElementById('loginSubmit');
+  err.textContent = '';
+  btn.disabled = true; btn.textContent = 'Signing in…';
+  try {
+    const res = await fetch('/.netlify/functions/login', {
+      method:'POST', credentials:'same-origin',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        usr: document.getElementById('loginUsr').value,
+        pwd: document.getElementById('loginPwd').value,
+      }),
+    });
+    const body = await res.json().catch(()=>({}));
+    if(!res.ok) throw new Error(body.error||`Login failed (${res.status})`);
+    document.getElementById('loginPwd').value = '';
+    await loadData();
+  } catch(e){ err.textContent = e.message; }
+  finally{ btn.disabled=false; btn.textContent='Sign in'; }
+});
+
+async function doLogout(){
+  try { await fetch('/.netlify/functions/logout',{method:'POST',credentials:'same-origin'}); }
+  finally { showLogin(); }
+}
+document.getElementById('logoutBtn').addEventListener('click', doLogout);
+document.getElementById('accessLogout').addEventListener('click', doLogout);
+
+loadData();
+</script>
+</body>
+</html>

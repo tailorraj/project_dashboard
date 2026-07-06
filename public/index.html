@@ -82,6 +82,7 @@
   .kpi.alt::before{ background: var(--teal); }
   .kpi.warn::before{ background: var(--amber); }
   .kpi.danger::before{ background: var(--red); }
+  .kpi.success::before{ background: var(--green); }
   .kpi.clickable{ cursor: pointer; transition: box-shadow .15s ease, transform .15s ease; }
   .kpi.clickable:hover{ box-shadow: 0 4px 14px rgba(15,42,74,0.08); transform: translateY(-1px); }
   .kpi-label{ font-size: 10.8px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-faint); font-weight: 600; margin-bottom: 9px; }
@@ -108,7 +109,7 @@
 
   .module-list{ padding: 6px 22px 14px; }
   .list-head{
-    display:grid; grid-template-columns: 16px 22px 1fr 90px 90px 100px 90px 130px; gap: 14px;
+    display:grid; grid-template-columns: 16px 22px 1fr 90px 90px 110px 100px 130px; gap: 14px;
     padding: 8px 0 6px; font-family:'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.05em;
     text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);
   }
@@ -118,7 +119,7 @@
   .module-group:last-child{ border-bottom: none; }
 
   .module-row{
-    display:grid; grid-template-columns: 16px 22px 1fr 90px 90px 100px 90px 130px; align-items:center; gap: 14px;
+    display:grid; grid-template-columns: 16px 22px 1fr 90px 90px 110px 100px 130px; align-items:center; gap: 14px;
     padding: 13px 0; cursor: pointer; user-select:none;
   }
   .module-row:hover .module-name{ color: var(--blue); }
@@ -133,12 +134,19 @@
   .module-name{ font-size: 13.8px; font-weight: 500; color: var(--text); transition: color .15s ease; }
   .datecell{ font-family:'JetBrains Mono', monospace; font-size: 11.5px; color: var(--text-faint); text-align: center; }
 
-  .bar-track{ height: 6px; background: var(--slate-soft); border-radius: 4px; overflow: hidden; position: relative; }
-  .bar-fill{ height: 100%; border-radius: 4px; background: var(--blue); }
-  .bar-fill.tender{ background: var(--teal); }
-  .bar-fill.zero{ background: var(--border); }
+  /* Segmented progress bar */
+  .bar-track{ height: 6px; background: var(--slate-soft); border-radius: 4px; overflow: hidden; display: flex; }
+  .bar-seg{ height: 100%; flex-shrink: 0; }
+  .bar-seg-done{ background: var(--green); }
+  .bar-seg-done.tender{ background: var(--teal); }
+  .bar-seg-progress{ background: var(--blue); opacity: 0.75; }
+  .bar-seg-zero{ background: var(--border); width: 100%; }
 
-  .frcount{ font-family:'JetBrains Mono', monospace; font-size: 12px; color: var(--text-muted); text-align: right; }
+  /* FR count + breakdown */
+  .frcount{ font-family:'JetBrains Mono', monospace; font-size: 11.5px; color: var(--text-muted); text-align: right; line-height: 1.55; }
+  .frcount .fc-done{ color: var(--green); font-weight: 600; }
+  .frcount .fc-prog{ color: var(--blue); font-weight: 600; font-size: 10.5px; display: block; }
+  .frcount .fc-open{ color: var(--text-faint); font-weight: 600; font-size: 10.5px; display: block; }
 
   .badges{ display:flex; justify-content:flex-end; gap:6px; }
   .badge{ font-family:'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 20px; white-space: nowrap; border: none; }
@@ -197,8 +205,12 @@
   .oi-item:last-child{ border-bottom: none; }
   .oi-top{ display:flex; align-items:center; gap: 8px; margin-bottom: 4px; }
   .oi-id{ font-family:'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--red); background: var(--red-soft); padding: 2px 7px; border-radius: 5px; }
+  .oi-id.blue{ color: var(--blue); background: var(--blue-soft); }
+  .oi-id.amber{ color: var(--amber); background: var(--amber-soft); }
+  .oi-id.green{ color: var(--green); background: var(--green-soft); }
   .oi-owner{ font-family:'JetBrains Mono', monospace; font-size: 10.5px; color: var(--text-faint); }
   .oi-desc{ font-size: 13px; color: var(--text); line-height: 1.5; }
+  .oi-context{ font-size: 11.5px; color: var(--text-faint); margin-top: 3px; font-family: 'JetBrains Mono', monospace; }
   .empty-state{ padding: 30px 4px; text-align:center; color: var(--text-faint); font-size: 13px; line-height: 1.6; }
 
   @media (max-width: 900px){ .kpis{ grid-template-columns: repeat(3, 1fr); } }
@@ -260,10 +272,10 @@
       <div class="kpi-value" id="kpiOi">—<span></span></div>
       <div class="kpi-link">VIEW ALL →</div>
     </div>
-    <div class="kpi">
-      <div class="kpi-label">Modules Not Started</div>
-      <div class="kpi-value" id="kpiNotStarted">—<span>of —</span></div>
-      <div class="kpi-foot" id="kpiNotStartedFoot">—</div>
+    <div class="kpi warn clickable" id="kpiInProgressCard">
+      <div class="kpi-label">FRs In Progress</div>
+      <div class="kpi-value" id="kpiInProgress">—<span>FRs</span></div>
+      <div class="kpi-link">VIEW LIST →</div>
     </div>
     <div class="kpi warn clickable" id="kpiActiveCard">
       <div class="kpi-label">Active This Week</div>
@@ -288,11 +300,11 @@
   </div>
 
   <div class="footnote">
-    <b>Reading this view —</b> click any module row to expand its Functional Requirements (ID, title, status, and its own Open Items). Progress % reflects FRs marked Completed in ERPNext. Start / Estimated End dates show once scheduling is entered in ERPNext — currently blank. Click a red Open Item badge, or the Active/Overdue KPI cards, for the underlying list.
+    <b>Reading this view —</b> click any module row to expand its Functional Requirements. The progress bar is segmented: <span style="color:var(--green);font-weight:600;">green = completed</span>, <span style="color:var(--blue);font-weight:600;">blue = in progress</span> (Working / Pending Review / Rework), grey = open/not started. Click a red Open Item badge, or any KPI card, for the underlying list. "FRs In Progress" shows all tasks currently being worked on across both modules.
     <div class="legend">
-      <div class="legend-item"><span class="dot" style="background:var(--slate)"></span> Not started</div>
-      <div class="legend-item"><span class="dot" style="background:var(--blue)"></span> In progress</div>
-      <div class="legend-item"><span class="dot" style="background:var(--green)"></span> On track / complete</div>
+      <div class="legend-item"><span class="dot" style="background:var(--slate)"></span> Not started (Open)</div>
+      <div class="legend-item"><span class="dot" style="background:var(--blue)"></span> In progress (Working / Review)</div>
+      <div class="legend-item"><span class="dot" style="background:var(--green)"></span> Completed</div>
       <div class="legend-item"><span class="dot" style="background:var(--red)"></span> Open item pending</div>
     </div>
   </div>
@@ -318,18 +330,52 @@ function frStats(m){
   const done = m.frs.filter(f => f.status === 'Completed').length;
   return { total, done, pct: total ? Math.round(done/total*100) : 0 };
 }
+
+// Returns breakdown of FR statuses for a module.
+// inProgress: Working | Pending Review | Rework
+// open: Open | Overdue (not yet worked on or past due but not completed)
+function frBreakdown(m){
+  const total = m.frs.length;
+  const done = m.frs.filter(f => f.status === 'Completed').length;
+  const inProgress = m.frs.filter(f => ['Working', 'Pending Review', 'Rework'].includes(f.status)).length;
+  const open = total - done - inProgress;
+  return { total, done, inProgress, open, pct: total ? Math.round(done/total*100) : 0 };
+}
+
 function moduleOiTotal(m){ return m.moduleOi.length + m.frs.reduce((a,f)=>a+f.oi.length,0); }
 function fmtDate(d){ return d ? d : '—'; }
 
+// Segmented bar: green = done, blue (semi) = in progress, grey track = open/not started.
+function segmentedBar(m, isTender){
+  const { total, done, inProgress } = frBreakdown(m);
+  if (total === 0) return `<div class="bar-track"><div class="bar-seg bar-seg-zero"></div></div>`;
+  const donePct = (done / total * 100).toFixed(2);
+  const progPct = (inProgress / total * 100).toFixed(2);
+  const doneClass = `bar-seg bar-seg-done${isTender ? ' tender' : ''}`;
+  return `<div class="bar-track">
+    <div class="${doneClass}" style="width:${donePct}%"></div>
+    <div class="bar-seg bar-seg-progress" style="width:${progPct}%"></div>
+  </div>`;
+}
+
+// Compact FR count with inline active indicator.
+function frcountHtml(m){
+  const { total, done, inProgress, open } = frBreakdown(m);
+  let sub = '';
+  if (inProgress > 0) sub += `<span class="fc-prog">${inProgress} working</span>`;
+  if (open > 0) sub += `<span class="fc-open">${open} open</span>`;
+  return `<div class="frcount"><span class="fc-done">${done}</span>/${total} FR${sub}</div>`;
+}
+
 function statusBadge(m){
-  const { total, pct } = frStats(m);
+  const { total, done, inProgress, pct } = frBreakdown(m);
   if (total === 0) return '<span class="badge not-started">NOT STARTED</span>';
   if (pct === 100) return '<span class="badge on-track">COMPLETE</span>';
-  if (pct > 0) return '<span class="badge in-progress">IN PROGRESS</span>';
+  if (inProgress > 0) return '<span class="badge in-progress">IN PROGRESS</span>';
+  if (done > 0) return '<span class="badge in-progress">IN PROGRESS</span>';
   return '<span class="badge not-started">NOT STARTED</span>';
 }
 function frStatusBadge(status){
-  // Mirrors ERPNext Task's full status set: Open, Working, Pending Review, Rework, Overdue, Completed.
   if (status === 'Completed') return '<span class="badge on-track">COMPLETED</span>';
   if (status === 'Working') return '<span class="badge in-progress">WORKING</span>';
   if (status === 'Pending Review') return '<span class="badge attention">PENDING REVIEW</span>';
@@ -359,23 +405,19 @@ function renderFrPanel(key, mi, m){
   return `<div class="fr-panel-inner">${moduleOiHtml}${frRows || '<div class="fr-empty">No FRs scoped yet.</div>'}</div>`;
 }
 
-// Presentation-only config per section — not part of the ERPNext payload,
-// so it's kept here rather than expected on `group` (live data only ever
-// supplies `label` and `modules`).
 const SECTION_UI = {
-  hr:     { icon: "HR", iconClass: "icon-hr",     barClass: "" },
-  tender: { icon: "TN", iconClass: "icon-tender", barClass: "tender" },
+  hr:     { icon: "HR", iconClass: "icon-hr",     isTender: false },
+  tender: { icon: "TN", iconClass: "icon-tender", isTender: true  },
 };
 
 function renderSection(key, group){
   const ui = SECTION_UI[key];
   const totalFr = group.modules.reduce((a,m)=>a+m.frs.length,0);
   const doneFr = group.modules.reduce((a,m)=>a+frStats(m).done,0);
+  const inProgressFr = group.modules.reduce((a,m)=>a+frBreakdown(m).inProgress,0);
   const totalOi = group.modules.reduce((a,m)=>a+moduleOiTotal(m),0);
 
   const rows = group.modules.map((m, i) => {
-    const { total, done, pct } = frStats(m);
-    const barClass = total === 0 ? 'zero' : ui.barClass;
     const oiCount = moduleOiTotal(m);
     const oiBadge = oiCount > 0 ? `<span class="badge oi" data-oi-module="${key}:${i}">${oiCount} OI</span>` : '';
     return `
@@ -386,13 +428,15 @@ function renderSection(key, group){
           <div class="module-name">${m.name}</div>
           <div class="datecell">${fmtDate(m.start)}</div>
           <div class="datecell">${fmtDate(m.end)}</div>
-          <div class="bar-track"><div class="bar-fill ${barClass}" style="width:${total === 0 ? 100 : Math.max(pct,3)}%"></div></div>
-          <div class="frcount">${done}/${total} FR</div>
+          <div>${segmentedBar(m, ui.isTender)}</div>
+          ${frcountHtml(m)}
           <div class="badges">${oiBadge}${statusBadge(m)}</div>
         </div>
         <div class="fr-panel">${renderFrPanel(key, i, m)}</div>
       </div>`;
   }).join('');
+
+  const inProgressLabel = inProgressFr > 0 ? ` · <b>${inProgressFr}</b> in progress` : '';
 
   return `
     <div class="section" data-group="${key}">
@@ -405,7 +449,7 @@ function renderSection(key, group){
           </div>
         </div>
         <div class="section-stats">
-          <div><b>${doneFr}/${totalFr}</b> FR complete</div>
+          <div><b>${doneFr}/${totalFr}</b> FR complete${inProgressLabel}</div>
           <div><b>${totalOi}</b> open items</div>
         </div>
       </div>
@@ -418,10 +462,10 @@ function renderSection(key, group){
     </div>`;
 }
 
-let data = null; // populated once the live fetch resolves — no mock data shown before then
+let data = null;
 
 function render(){
-  if (!data) return; // still loading — leave the loadingState markup as-is
+  if (!data) return;
 
   document.getElementById('sections').innerHTML =
     renderSection('hr', data.hr) + renderSection('tender', data.tender);
@@ -429,7 +473,8 @@ function render(){
   const allMods = [...data.hr.modules, ...data.tender.modules];
   const totalFr = allMods.reduce((a,m)=>a+m.frs.length,0);
   const doneFr = allMods.reduce((a,m)=>a+frStats(m).done,0);
-  const notStarted = allMods.filter(m => m.frs.length === 0).length;
+  const inProgressFrs = allMods.flatMap(m => m.frs.map(f => ({ ...f, _module: m.name }))).filter(f => ['Working', 'Pending Review', 'Rework'].includes(f.status));
+  const openFrs = allMods.flatMap(m => m.frs.map(f => ({ ...f, _module: m.name }))).filter(f => ['Open', 'Overdue'].includes(f.status));
   const activeCount = (data.activeTasks || []).length;
   const overdueCount = (data.overdueTasks || []).length;
   const totalOi = allMods.reduce((a,m)=>a+moduleOiTotal(m),0);
@@ -442,9 +487,8 @@ function render(){
   document.getElementById('kpiOverallFoot').textContent = `${doneFr} of ${totalFr} FRs completed`;
   document.getElementById('kpiFrTotal').innerHTML = `${totalFr}<span>total</span>`;
   document.getElementById('kpiFrFoot').textContent = `${hrFrCount} HR · ${tenderFrCount} Tender`;
-  document.getElementById('kpiOi').innerHTML = `${totalOi}<span>of ${totalOi}</span>`;
-  document.getElementById('kpiNotStarted').innerHTML = `${notStarted}<span>of ${allMods.length}</span>`;
-  document.getElementById('kpiNotStartedFoot').textContent = allMods.filter(m=>m.frs.length===0).map(m=>m.name).slice(0,2).join(', ') || '—';
+  document.getElementById('kpiOi').innerHTML = `${totalOi}<span>pending</span>`;
+  document.getElementById('kpiInProgress').innerHTML = `${inProgressFrs.length}<span>FRs</span>`;
   document.getElementById('kpiActive').innerHTML = `${activeCount}<span>tasks</span>`;
   document.getElementById('kpiOverdue').innerHTML = `${overdueCount}<span>tasks</span>`;
 
@@ -476,17 +520,27 @@ const dialogTitle = document.getElementById('dialogTitle');
 const dialogSub = document.getElementById('dialogSub');
 const dialogBody = document.getElementById('dialogBody');
 
+// items: [{ id, owner, desc, type?, context? }]
+// type: 'oi' (red, default) | 'progress' (blue) | 'overdue' (amber) | 'done' (green)
 function openDialog(title, sub, items){
   dialogTitle.textContent = title;
   dialogSub.textContent = sub;
   if (!items || items.length === 0){
     dialogBody.innerHTML = `<div class="empty-state">Nothing here right now — this list will populate as data comes in from ERPNext.</div>`;
   } else {
-    dialogBody.innerHTML = items.map(it => `
-      <div class="oi-item">
-        <div class="oi-top"><span class="oi-id">${it.id}</span><span class="oi-owner">${it.owner}</span></div>
-        <div class="oi-desc">${it.desc}</div>
-      </div>`).join('');
+    dialogBody.innerHTML = items.map(it => {
+      const colorClass = it.type === 'progress' ? 'blue'
+                       : it.type === 'overdue'  ? 'amber'
+                       : it.type === 'done'     ? 'green'
+                       : '';
+      const contextHtml = it.context ? `<div class="oi-context">${it.context}</div>` : '';
+      return `
+        <div class="oi-item">
+          <div class="oi-top"><span class="oi-id ${colorClass}">${it.id}</span><span class="oi-owner">${it.owner}</span></div>
+          <div class="oi-desc">${it.desc}</div>
+          ${contextHtml}
+        </div>`;
+    }).join('');
   }
   overlay.classList.add('open');
 }
@@ -496,7 +550,6 @@ overlay.addEventListener('click', (e) => { if (e.target === overlay) closeDialog
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDialog(); });
 
 function attachHandlers(){
-  // module row expand/collapse
   document.querySelectorAll('[data-row-toggle]').forEach(row => {
     row.addEventListener('click', () => {
       const group = row.closest('.module-group');
@@ -506,7 +559,6 @@ function attachHandlers(){
     });
   });
 
-  // module-level "N OI" badge -> full module OI list (module-direct + all FR-level)
   document.querySelectorAll('[data-oi-module]').forEach(el => {
     el.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -517,7 +569,6 @@ function attachHandlers(){
     });
   });
 
-  // scoped OI badges inside the FR panel (module-level or per-FR)
   document.querySelectorAll('[data-oi-scope]').forEach(el => {
     el.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -534,7 +585,6 @@ function attachHandlers(){
     });
   });
 
-  // FR description icon -> single-item dialog showing the FR's description
   document.querySelectorAll('[data-fr-desc]').forEach(el => {
     el.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -555,16 +605,42 @@ document.getElementById('kpiOiCard').addEventListener('click', () => {
   const all = [...data.hr.modules, ...data.tender.modules].flatMap(m => [...m.moduleOi, ...m.frs.flatMap(f=>f.oi)]);
   openDialog('All Open Items', `${all.length} pending across HR & Tender`, all);
 });
+
+document.getElementById('kpiInProgressCard').addEventListener('click', () => {
+  if (!data) return;
+  const sections = [
+    { key: 'hr', label: data.hr.label },
+    { key: 'tender', label: data.tender.label },
+  ];
+  const items = sections.flatMap(({ key, label }) =>
+    data[key].modules.flatMap(m =>
+      m.frs
+        .filter(f => ['Working', 'Pending Review', 'Rework'].includes(f.status))
+        .map(f => ({
+          id: f.id,
+          owner: f.status,
+          desc: f.title,
+          context: `${label} · ${m.name}`,
+          type: 'progress',
+        }))
+    )
+  );
+  openDialog(
+    'FRs In Progress',
+    `${items.length} task${items.length !== 1 ? 's' : ''} currently Working, under Review, or marked for Rework`,
+    items
+  );
+});
+
 document.getElementById('kpiActiveCard').addEventListener('click', () => {
   if (!data) return;
-  // activeTasks come from Timesheet rows logged against a task this week —
-  // see netlify/functions/get-progress-data.js -> getActiveTaskNamesThisWeek()
-  const items = (data.activeTasks || []).map(t => ({ id: t.id, owner: t.status, desc: t.title }));
+  const items = (data.activeTasks || []).map(t => ({ id: t.id, owner: t.status, desc: t.title, type: 'progress' }));
   openDialog('Active Tasks This Week', 'Based on timesheets logged this week', items);
 });
+
 document.getElementById('kpiOverdueCard').addEventListener('click', () => {
   if (!data) return;
-  const items = (data.overdueTasks || []).map(t => ({ id: t.id, owner: `Due ${t.dueDate}`, desc: t.title }));
+  const items = (data.overdueTasks || []).map(t => ({ id: t.id, owner: `Due ${t.dueDate}`, desc: t.title, type: 'overdue' }));
   openDialog('Overdue Open Tasks', 'Past expected end date, not yet Completed/Cancelled', items);
 });
 
@@ -589,7 +665,6 @@ function showDashboard(){
   dashboardWrap.style.display = '';
 }
 
-// ---------- bootstrap: fetch live data (per-user ERPNext session), no mock fallback ----------
 async function loadDashboard(){
   try {
     const res = await fetch('/.netlify/functions/get-progress-data', { credentials: 'same-origin' });
