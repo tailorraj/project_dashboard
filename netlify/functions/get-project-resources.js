@@ -51,11 +51,25 @@ exports.handler = async function (event) {
   const authHeaders = { Cookie: `sid=${sid}` };
 
   try {
-    const rows = await erpGet("/api/resource/Resource Allocation", {
-      filters: [["project", "=", ERP_PROJECT_NAME], ["status", "=", "Active"]],
+    const baseParams = {
       fields: ["employee_name", "role", "custom_user_id"],
       limit_page_length: 0,
+    };
+
+    // Try with project filter first; fall back to all active records if nothing matches.
+    // This handles cases where the project link value doesn't exactly match ERP_PROJECT_NAME.
+    let rows = await erpGet("/api/resource/Resource Allocation", {
+      ...baseParams,
+      filters: [["project", "=", ERP_PROJECT_NAME], ["status", "=", "Active"]],
     }, authHeaders);
+
+    if (!Array.isArray(rows) || rows.length === 0) {
+      console.warn(`[get-project-resources] project filter returned nothing for "${ERP_PROJECT_NAME}" — falling back to all active records`);
+      rows = await erpGet("/api/resource/Resource Allocation", {
+        ...baseParams,
+        filters: [["status", "=", "Active"]],
+      }, authHeaders);
+    }
 
     const resources = (Array.isArray(rows) ? rows : [])
       .filter(r => r.custom_user_id)
