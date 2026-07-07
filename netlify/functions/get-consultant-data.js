@@ -189,16 +189,6 @@ async function getLoggedUser(authHeaders) {
   } catch (_) { return null; }
 }
 
-async function userHasRole(username, roleName, authHeaders) {
-  try {
-    const url = `${ERP_URL}/api/resource/User/${encodeURIComponent(username)}`;
-    const res = await fetch(url, { headers: authHeaders });
-    if (!res.ok) return false;
-    const json = await res.json();
-    return (json.data?.roles || []).some(r => r.role === roleName);
-  } catch (_) { return false; }
-}
-
 exports.handler = async function (event) {
   const headers = { "Content-Type": "application/json", "Cache-Control": "private, no-store" };
 
@@ -222,10 +212,9 @@ exports.handler = async function (event) {
     ]);
 
     stage = "fetch subtrees";
-    const [hrTasks, tenderTasks, isSystemManager] = await Promise.all([
+    const [hrTasks, tenderTasks] = await Promise.all([
       getSubtree(hrRoot.lft, hrRoot.rgt, authHeaders),
       getSubtree(tenderRoot.lft, tenderRoot.rgt, authHeaders),
-      currentUser ? userHasRole(currentUser, "System Manager", authHeaders) : Promise.resolve(false),
     ]);
 
     const allTaskNames = [...hrTasks, ...tenderTasks].map((t) => t.name);
@@ -255,7 +244,7 @@ exports.handler = async function (event) {
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify({ hr, tender, summary, currentUser, isSystemManager, generatedAt: new Date().toISOString() }),
+      body: JSON.stringify({ hr, tender, summary, currentUser, generatedAt: new Date().toISOString() }),
     };
   } catch (err) {
     if (err.authError)

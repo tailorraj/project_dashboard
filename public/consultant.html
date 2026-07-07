@@ -288,42 +288,6 @@
   .cmt-post:hover{ filter:brightness(1.3); }
   .cmt-post:disabled{ opacity:.5; cursor:default; }
 
-  /* ── View-as banner (System Manager impersonation) ── */
-  .viewas-banner{
-    background:var(--amber-soft); border-bottom:1px solid rgba(180,83,9,.2);
-    padding:9px 28px; display:flex; align-items:center; gap:10px;
-    font-size:12.5px; color:var(--amber); flex-shrink:0;
-  }
-  .viewas-icon{ font-size:15px; flex-shrink:0; }
-  .viewas-name{ font-weight:700; }
-  .viewas-reset{
-    font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600;
-    padding:4px 12px; border:1px solid rgba(180,83,9,.3); border-radius:6px;
-    background:var(--card); color:var(--amber); cursor:pointer; margin-left:auto; flex-shrink:0;
-  }
-  .viewas-reset:hover{ background:var(--amber); color:#fff; }
-
-  /* ── Assignment filter banner ── */
-  .assign-banner{
-    background:var(--blue-soft); border-bottom:1px solid rgba(29,78,216,.18);
-    padding:9px 28px; display:flex; align-items:center; gap:12px;
-    font-size:12.5px; color:var(--blue); flex-shrink:0;
-  }
-  .assign-banner-icon{ font-size:14px; flex-shrink:0; }
-  .assign-banner-text{ flex:1; }
-  .assign-banner-btn{
-    font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600;
-    padding:4px 12px; border:1px solid rgba(29,78,216,.3); border-radius:6px;
-    background:var(--card); color:var(--blue); cursor:pointer; flex-shrink:0;
-  }
-  .assign-banner-btn:hover{ background:var(--blue); color:#fff; }
-
-  /* ── Module assigned-to-me badge ── */
-  .mod-my-badge{
-    font-family:'JetBrains Mono',monospace; font-size:9.5px; font-weight:700;
-    background:var(--green-soft); color:var(--green); padding:2px 7px; border-radius:4px;
-    flex-shrink:0;
-  }
 
   @media(max-width:900px){
     .header,.toolbar,.main,.kpi-strip{ padding-left:16px; padding-right:16px; }
@@ -392,12 +356,10 @@
       <option value="Completed">Completed</option>
       <option value="Cancelled">Cancelled</option>
     </select>
+    <select class="tool-select" id="modFilter" style="min-width:160px;">
+      <option value="">All Modules</option>
+    </select>
     <div class="tool-spacer"></div>
-    <!-- View-as control — only visible to System Managers -->
-    <div id="viewAsWrap" style="display:none; align-items:center; gap:6px;">
-      <span style="font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--text-faint); letter-spacing:.04em; white-space:nowrap;">VIEW AS</span>
-      <select class="tool-select" id="viewAsSel" style="width:170px;"></select>
-    </div>
     <input class="tool-search" type="search" id="searchBox" placeholder="Search by code or title…">
     <button class="tool-refresh" id="refreshBtn">↻ Refresh</button>
   </div>
@@ -409,20 +371,6 @@
     <div class="kpi-chip"><span class="kpi-num amber" id="kOi">—</span><span class="kpi-lbl">OIs open</span></div>
     <div class="kpi-chip"><span class="kpi-num red" id="kOv">—</span><span class="kpi-lbl">Overdue</span></div>
     <div class="kpi-chip"><span class="kpi-num" id="kAct">—</span><span class="kpi-lbl">Active this week</span></div>
-  </div>
-
-  <!-- View-as mode banner (amber) — shown when a System Manager is impersonating a user -->
-  <div class="viewas-banner" id="viewAsBanner" style="display:none;">
-    <span class="viewas-icon">👁</span>
-    <span>Viewing workspace as <span class="viewas-name" id="viewAsNameLabel">—</span></span>
-    <button class="viewas-reset" onclick="resetViewAs()">Reset to my view</button>
-  </div>
-
-  <!-- Assignment filter banner (blue) — shown when the logged-in user has assigned modules -->
-  <div class="assign-banner" id="assignBanner" style="display:none;">
-    <span class="assign-banner-icon">⊙</span>
-    <span class="assign-banner-text" id="assignBannerText">Showing modules assigned to you</span>
-    <button class="assign-banner-btn" id="assignBannerBtn" onclick="clearMyFilter()">Show all</button>
   </div>
 
   <div class="main" id="main">
@@ -502,103 +450,16 @@ let fType   = 'all';
 let fStatus = 'all';
 let fSearch = '';
 
-// ── Assignment filter ──────────────────────────────────────────
-let myAssignedModules = new Set(); // `${sec}:${taskName}` for modules assigned to active user
-let filterMyModules   = false;
+// ── Module filter ─────────────────────────────────────────────
+let fMod = '';
 
-// ── View-as (System Manager only) ─────────────────────────────
-let viewAsEmail = null;
-let viewAsName  = null;
-let _viewAsResources = null;
-
-function applyAssignmentFilter(data) {
-  myAssignedModules = new Set();
-  const me = data.currentUser;
-  if (!me) return;
-  ['hr', 'tender'].forEach(k => {
-    (data[k].modules || []).forEach(m => {
-      if ((m.assignees || []).includes(me)) {
-        myAssignedModules.add(`${k}:${m.taskName}`);
-      }
-    });
-  });
-  filterMyModules = myAssignedModules.size > 0;
-}
-
-function applyViewAsFilter(email) {
-  myAssignedModules = new Set();
-  if (!cData || !email) return;
-  ['hr', 'tender'].forEach(k => {
-    (cData[k].modules || []).forEach(m => {
-      if ((m.assignees || []).includes(email)) {
-        myAssignedModules.add(`${k}:${m.taskName}`);
-      }
-    });
-  });
-  filterMyModules = myAssignedModules.size > 0;
-}
-
-async function initViewAsControl() {
-  if (!cData?.isSystemManager) return;
-
-  const wrap = document.getElementById('viewAsWrap');
-  if (wrap) wrap.style.display = 'flex';
-
-  try {
-    const res = await fetch('/.netlify/functions/get-project-resources', { credentials: 'same-origin' });
-    const json = await res.json();
-    _viewAsResources = res.ok ? (json.resources || []) : [];
-  } catch { _viewAsResources = []; }
-
-  const sel = document.getElementById('viewAsSel');
-  if (!sel) return;
-  sel.innerHTML = '<option value="">— select user to preview —</option>' +
-    (_viewAsResources || []).map(r =>
-      `<option value="${r.email}">${r.name}${r.role ? ' · ' + r.role : ''}</option>`
-    ).join('');
-
-  sel.addEventListener('change', () => {
-    const email = sel.value;
-    if (!email) {
-      resetViewAs(false); // keep select value
-    } else {
-      const r = (_viewAsResources || []).find(r => r.email === email);
-      viewAsEmail = email;
-      viewAsName  = r ? r.name : email;
-      applyViewAsFilter(email);
-      updateViewAsBanner();
-      render();
-    }
-  });
-}
-
-function updateViewAsBanner() {
-  const banner = document.getElementById('viewAsBanner');
-  const label  = document.getElementById('viewAsNameLabel');
-  if (!banner) return;
-  if (viewAsEmail) {
-    banner.style.display = 'flex';
-    if (label) label.textContent = viewAsName || viewAsEmail;
-  } else {
-    banner.style.display = 'none';
-  }
-}
-
-function resetViewAs(resetSel = true) {
-  viewAsEmail = null;
-  viewAsName  = null;
-  if (resetSel) {
-    const sel = document.getElementById('viewAsSel');
-    if (sel) sel.value = '';
-  }
-  applyAssignmentFilter(cData);
-  updateViewAsBanner();
-  render();
-}
-
-function clearMyFilter() {
-  filterMyModules = false;
-  render();
+function populateModFilter() {
+  const sel = document.getElementById('modFilter');
+  if (!sel || !cData) return;
+  const allMods = [...(cData.hr?.modules || []), ...(cData.tender?.modules || [])];
+  sel.innerHTML = '<option value="">All Modules</option>' +
+    allMods.map(m => `<option value="${m.taskName}">${m.name}</option>`).join('');
+  sel.value = fMod;
 }
 
 // ── Helpers ────────────────────────────────────────────────────
@@ -650,14 +511,6 @@ function render(){
   document.getElementById('kOv').textContent    = summary.overdueCount;
   document.getElementById('kAct').textContent   = summary.activeCount;
 
-  // Assignment filter banner — hide when in view-as mode (viewas banner covers it)
-  const banner = document.getElementById('assignBanner');
-  if (filterMyModules && !viewAsEmail) {
-    banner.style.display = 'flex';
-  } else {
-    banner.style.display = 'none';
-  }
-
   const td = today();
   const sections = [
     { key:'hr',     data:hr     },
@@ -673,8 +526,8 @@ function render(){
     sec.modules.forEach(mod => {
       const modKey = `${key}:${mod.taskName}`;
 
-      // Skip unassigned modules when filter is active
-      if (filterMyModules && !myAssignedModules.has(modKey)) return;
+      // Module filter
+      if (fMod && mod.taskName !== fMod) return;
 
       const rows = [];
 
@@ -707,9 +560,6 @@ function render(){
       const frDone = mod.frs.filter(f=>f.status==='Completed').length;
       const secLabel = key === 'hr' ? 'HR' : 'TN';
       const openAttr = openMods.has(modKey) || isFirstRender ? ' open' : '';
-      const isMyMod = myAssignedModules.has(modKey);
-      const badgeLabel = viewAsEmail ? `assigned to ${viewAsName || viewAsEmail}` : 'assigned to you';
-      const myBadge = isMyMod ? `<span class="mod-my-badge">${badgeLabel}</span>` : '';
 
       html += `
         <div class="mod-group${openAttr}" data-mod="${modKey}">
@@ -717,7 +567,6 @@ function render(){
             <span class="mod-chevron">▶</span>
             <span class="sec-badge ${key}">${secLabel}</span>
             <span class="mod-name">${mod.name}</span>
-            ${myBadge}
             <span class="mod-meta">${frDone}/${mod.frs.length} FR done · ${mod.moduleOi.length} module OI</span>
           </div>
           <div class="mod-body">
@@ -1076,6 +925,7 @@ document.getElementById('typeTabs').addEventListener('click', e=>{
   pill.classList.add('active'); fType = pill.dataset.type; render();
 });
 document.getElementById('stFilter').addEventListener('change', e=>{ fStatus=e.target.value; render(); });
+document.getElementById('modFilter').addEventListener('change', e=>{ fMod=e.target.value; render(); });
 document.getElementById('searchBox').addEventListener('input',  e=>{ fSearch=e.target.value.trim(); render(); });
 document.getElementById('refreshBtn').addEventListener('click', ()=>loadData());
 
@@ -1105,10 +955,9 @@ async function loadData(){
       throw new Error(detail);
     }
     cData = json;
-    applyAssignmentFilter(cData);
     showApp();
+    populateModFilter();
     render();
-    if (cData.isSystemManager) await initViewAsControl();
   } catch(err){
     console.error('Load failed:', err.message);
     showApp();
