@@ -236,6 +236,7 @@ function buildLeadSubmodule(rootDoc, allTasks, userNames) {
       start: mod.exp_start_date || null,
       end: mod.exp_end_date || null,
       assignments: resolveAssigns(mod._assign, mod.owner),
+      assigneeEmails: parseAssign(mod._assign),
       moduleOi,
       frs,
       completedFrs,
@@ -342,13 +343,25 @@ exports.handler = async function (event) {
       getTaskByName(TENDER_ROOT_TASK, authHeaders),
     ]);
 
+    const hrAssignees     = parseAssign(hrRoot._assign);
+    const tenderAssignees = parseAssign(tenderRoot._assign);
+
     stage = "fetch subtrees";
-    const [hrTasks, tenderTasks] = await Promise.all([
+    const [hrTasks, tenderTasks, isSystemManager] = await Promise.all([
       getSubtree(hrRoot.lft, hrRoot.rgt, authHeaders),
       getSubtree(tenderRoot.lft, tenderRoot.rgt, authHeaders),
+      userHasRole(username, "System Manager", authHeaders),
     ]);
 
-    const allTasks = [...hrTasks, ...tenderTasks];
+    // System Managers always see all; PMs see only assigned sections.
+    // If a root has no assignees yet, everyone sees it (backwards-compat).
+    const showHr     = isSystemManager || hrAssignees.length === 0     || hrAssignees.includes(username);
+    const showTender = isSystemManager || tenderAssignees.length === 0 || tenderAssignees.includes(username);
+
+    const allTasks = [
+      ...(showHr     ? hrTasks     : []),
+      ...(showTender ? tenderTasks : []),
+    ];
     const allTaskNames = allTasks.map(t => t.name);
 
     stage = "resolve user names";
@@ -386,8 +399,8 @@ exports.handler = async function (event) {
         walk(mod.name);
       });
     }
-    mapTree(hrTasks, hrRoot, "HR");
-    mapTree(tenderTasks, tenderRoot, "Tender");
+    if (showHr)     mapTree(hrTasks,     hrRoot,     "HR");
+    if (showTender) mapTree(tenderTasks, tenderRoot, "Tender");
 
     const weeklyActivity = rawActivity.map(row => {
       const t = taskMap[row.taskId];
@@ -402,13 +415,15 @@ exports.handler = async function (event) {
     });
 
     stage = "build payload";
-    const hr = buildLeadSubmodule(hrRoot, hrTasks, userNames);
-    const tender = buildLeadSubmodule(tenderRoot, tenderTasks, userNames);
+    const hr     = showHr     ? buildLeadSubmodule(hrRoot,     hrTasks,     userNames) : null;
+    const tender = showTender ? buildLeadSubmodule(tenderRoot, tenderTasks, userNames) : null;
 
     // Weekly tasks: all non-completed FRs, sorted by urgency
     const statusOrder = { Working: 0, "Pending Review": 1, Rework: 2, Overdue: 3, Open: 4 };
     const weeklyTasks = [];
-    [{ section: hr, key: "HR" }, { section: tender, key: "Tender" }].forEach(({ section, key }) => {
+    [{ section: hr, key: "HR" }, { section: tender, key: "Tender" }]
+      .filter(({ section }) => section != null)
+      .forEach(({ section, key }) => {
       section.modules.forEach(mod => {
         mod.frs
           .filter(fr => !["Completed", "Cancelled"].includes(fr.status))
@@ -433,16 +448,25 @@ exports.handler = async function (event) {
     weeklyTasks.sort((a, b) => (statusOrder[a.status] ?? 9) - (statusOrder[b.status] ?? 9));
 
     console.log("[handler] success", {
-      hrModules: hr.modules.length,
-      tenderModules: tender.modules.length,
+      hrModules:     hr?.modules.length     ?? "hidden",
+      tenderModules: tender?.modules.length ?? "hidden",
       activityRows: weeklyActivity.length,
       weeklyTasks: weeklyTasks.length,
+      isSystemManager,
     });
 
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify({ hr, tender, weeklyActivity, weeklyTasks, generatedAt: new Date().toISOString() }),
+      body: JSON.stringify({
+        hr, tender, weeklyActivity, weeklyTasks,
+        isSystemManager,
+        hrRootTask:     HR_ROOT_TASK,
+        tenderRootTask: TENDER_ROOT_TASK,
+        hrAssignees,
+        tenderAssignees,
+        generatedAt: new Date().toISOString(),
+      }),
     };
   } catch (err) {
     if (err.authError) {

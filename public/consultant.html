@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pioneer ERP — Consultant Workspace</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F4F7FB; --card:#FFFFFF; --border:#E3E9F1; --border-soft:#EDF1F7;
+    --navy:#0F2A4A; --blue:#1D4ED8; --blue-soft:#EAF0FE; --teal:#0891B2; --teal-soft:#E6F6F9;
+    --text:#172033; --text-muted:#64748B; --text-faint:#9AA6B8;
+    --green:#15803D; --green-soft:#E9F7EF; --amber:#B45309; --amber-soft:#FDF2E3;
+    --slate:#94A3B8; --slate-soft:#F1F4F8; --red:#B91C1C; --red-soft:#FCEBEB;
+    --radius:12px;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  body{ background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased; min-height:100vh; }
+
+  /* ── Login ── */
+  .login-screen{ position:fixed; inset:0; background:var(--bg); display:flex; align-items:center; justify-content:center; z-index:200; padding:24px; }
+  .login-card{ background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:36px 32px; width:100%; max-width:390px; box-shadow:0 20px 60px rgba(15,42,74,0.12); }
+  .login-eyebrow{ font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:.08em; color:var(--text-faint); text-transform:uppercase; margin-bottom:12px; }
+  .login-title{ font-family:'Manrope',sans-serif; font-weight:700; font-size:19px; color:var(--navy); margin-bottom:6px; }
+  .login-sub{ font-size:12.5px; color:var(--text-muted); line-height:1.55; margin-bottom:22px; }
+  .login-label{ display:block; font-size:11.5px; font-weight:600; color:var(--text-muted); margin-bottom:5px; }
+  .login-input{ width:100%; padding:9px 11px; margin-bottom:14px; border:1px solid var(--border); border-radius:8px; font-size:13.5px; font-family:inherit; }
+  .login-input:focus{ outline:none; border-color:var(--blue); }
+  .login-error{ color:var(--red); font-size:12.5px; margin:-4px 0 12px; min-height:1em; }
+  .login-submit{ width:100%; padding:10px; border:none; border-radius:8px; background:var(--blue); color:#fff; font-weight:600; font-size:13.5px; cursor:pointer; }
+  .login-submit:hover{ filter:brightness(1.05); }
+  .login-submit:disabled{ opacity:.6; cursor:default; }
+  .login-client-link{ margin-top:16px; text-align:center; font-size:12px; color:var(--text-faint); }
+  .login-client-link a{ color:var(--blue); text-decoration:none; }
+
+  /* ── App shell ── */
+  .app{ display:flex; flex-direction:column; min-height:100vh; }
+
+  /* ── Header ── */
+  .header{
+    background:var(--navy); color:#fff; height:56px; padding:0 28px;
+    display:flex; align-items:center; gap:20px; flex-shrink:0;
+    position:sticky; top:0; z-index:60;
+  }
+  .header-logo{
+    width:34px; height:34px; border-radius:9px;
+    background:linear-gradient(135deg,#1D4ED8,#0891B2);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'JetBrains Mono',monospace; font-weight:700; font-size:12px; color:#fff; flex-shrink:0;
+  }
+  .header-brand{ flex:1; }
+  .header-name{ font-family:'Manrope',sans-serif; font-weight:700; font-size:14.5px; color:#fff; line-height:1.2; }
+  .header-sub{ font-family:'JetBrains Mono',monospace; font-size:9.5px; color:rgba(255,255,255,0.45); letter-spacing:.08em; text-transform:uppercase; margin-top:1px; }
+  .header-actions{ display:flex; align-items:center; gap:8px; }
+  .header-link{
+    font-family:'JetBrains Mono',monospace; font-size:10.5px; color:rgba(255,255,255,0.55);
+    text-decoration:none; padding:5px 11px; border-radius:6px; border:1px solid rgba(255,255,255,0.12);
+    transition:all .15s;
+  }
+  .header-link:hover{ color:#fff; border-color:rgba(255,255,255,0.28); }
+  .header-signout{ font-family:'JetBrains Mono',monospace; font-size:10.5px; color:rgba(255,255,255,0.4); cursor:pointer; border:none; background:transparent; }
+  .header-signout:hover{ color:#fff; }
+
+  /* ── Toolbar ── */
+  .toolbar{
+    background:var(--card); border-bottom:1px solid var(--border);
+    padding:9px 28px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+    position:sticky; top:56px; z-index:50;
+  }
+  .tool-group{ display:flex; gap:3px; }
+  .tool-pill{
+    font-family:'JetBrains Mono',monospace; font-size:11px; padding:5px 12px; border-radius:6px;
+    cursor:pointer; color:var(--text-muted); user-select:none; letter-spacing:.03em; border:1px solid transparent;
+    transition:all .12s;
+  }
+  .tool-pill.active{ background:var(--blue); color:#fff; border-color:var(--blue); }
+  .tool-pill:not(.active):hover{ background:var(--slate-soft); border-color:var(--border); }
+  .tool-sep{ width:1px; height:22px; background:var(--border); flex-shrink:0; }
+  .tool-select{
+    padding:5px 28px 5px 10px; border:1px solid var(--border); border-radius:7px;
+    font-size:11.5px; font-family:inherit; color:var(--text); background:var(--card);
+    appearance:none; -webkit-appearance:none; cursor:pointer;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2394A3B8' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 9px center;
+  }
+  .tool-select:focus{ outline:none; border-color:var(--blue); }
+  .tool-search{
+    padding:5px 11px; border:1px solid var(--border); border-radius:7px;
+    font-size:11.5px; font-family:inherit; color:var(--text); width:210px;
+  }
+  .tool-search:focus{ outline:none; border-color:var(--blue); }
+  .tool-spacer{ flex:1; }
+  .tool-refresh{
+    font-family:'JetBrains Mono',monospace; font-size:11px; padding:5px 11px;
+    border:1px solid var(--border); border-radius:7px; cursor:pointer; color:var(--text-muted); background:var(--card);
+  }
+  .tool-refresh:hover{ background:var(--slate-soft); }
+
+  /* ── KPI strip ── */
+  .kpi-strip{
+    background:#FAFBFD; border-bottom:1px solid var(--border);
+    padding:11px 28px; display:flex; align-items:center; gap:0; flex-wrap:wrap;
+  }
+  .kpi-chip{ display:flex; align-items:baseline; gap:6px; padding:0 20px 0 0; }
+  .kpi-chip + .kpi-chip{ border-left:1px solid var(--border); padding-left:20px; }
+  .kpi-num{ font-family:'Manrope',sans-serif; font-size:22px; font-weight:800; color:var(--navy); line-height:1; }
+  .kpi-num.green{ color:var(--green); }
+  .kpi-num.blue{ color:var(--blue); }
+  .kpi-num.amber{ color:var(--amber); }
+  .kpi-num.red{ color:var(--red); }
+  .kpi-lbl{ font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--text-faint); }
+
+  /* ── Main ── */
+  .main{ flex:1; padding:22px 28px; }
+
+  /* ── Module group ── */
+  .mod-group{ margin-bottom:14px; }
+  .mod-head{
+    display:flex; align-items:center; gap:10px; padding:10px 16px;
+    background:var(--card); border:1px solid var(--border); border-radius:10px 10px 0 0;
+    cursor:pointer; user-select:none;
+    border-bottom-left-radius:0; border-bottom-right-radius:0;
+  }
+  .mod-group:not(.open) .mod-head{ border-radius:10px; }
+  .mod-chevron{ font-size:9px; color:var(--text-faint); transition:transform .15s; flex-shrink:0; }
+  .mod-group.open .mod-chevron{ transform:rotate(90deg); }
+  .sec-badge{ font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; padding:2px 8px; border-radius:4px; letter-spacing:.04em; flex-shrink:0; }
+  .sec-badge.hr{ background:var(--blue-soft); color:var(--blue); }
+  .sec-badge.tender{ background:var(--teal-soft); color:var(--teal); }
+  .mod-name{ font-family:'Manrope',sans-serif; font-weight:700; font-size:13.5px; color:var(--navy); }
+  .mod-meta{ font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--text-faint); margin-left:auto; }
+
+  .mod-body{ display:none; }
+  .mod-group.open .mod-body{ display:block; }
+
+  /* ── Task table ── */
+  .task-table{
+    background:var(--card); border:1px solid var(--border); border-top:none;
+    border-radius:0 0 10px 10px; overflow:hidden;
+  }
+  .t-head{
+    display:grid;
+    grid-template-columns: 112px 1fr 72px 170px 105px 70px 38px;
+    gap:10px; padding:7px 16px;
+    font-family:'JetBrains Mono',monospace; font-size:9.5px; letter-spacing:.07em;
+    text-transform:uppercase; color:var(--text-faint);
+    background:#FAFBFD; border-bottom:1px solid var(--border-soft);
+  }
+
+  /* FR row */
+  .t-row{
+    display:grid;
+    grid-template-columns: 112px 1fr 72px 170px 105px 70px 38px;
+    gap:10px; align-items:center; padding:10px 16px;
+    border-bottom:1px solid var(--border-soft); cursor:pointer; transition:background .1s;
+  }
+  .t-row:last-child{ border-bottom:none; }
+  .t-row:hover{ background:#F5F8FF; }
+
+  /* OI row — indented */
+  .oi-row{
+    display:grid;
+    grid-template-columns: 96px 1fr 72px 170px 105px 70px 38px;
+    gap:10px; align-items:center; padding:8px 16px 8px 32px;
+    border-bottom:1px solid var(--border-soft); cursor:pointer; transition:background .1s;
+    background:#FDFEFF;
+  }
+  .oi-row:last-child{ border-bottom:none; }
+  .oi-row:hover{ background:#EEF5FF; }
+
+  /* cells */
+  .c-code{ font-family:'JetBrains Mono',monospace; font-size:11.5px; font-weight:700; }
+  .c-code.fr{ color:var(--blue); }
+  .c-code.oi{ color:var(--red); }
+  .c-code.mod-oi{ color:var(--amber); }
+
+  .c-title{ font-size:13px; color:var(--text); display:flex; align-items:center; gap:0; min-width:0; }
+  .c-title-text{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .dot-active{ display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--green); margin-left:7px; flex-shrink:0; }
+  .dot-overdue{ display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--red); margin-left:7px; flex-shrink:0; }
+
+  .c-type{ }
+  .t-badge{ font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; padding:2px 7px; border-radius:4px; white-space:nowrap; }
+  .t-badge.fr{ background:var(--blue-soft); color:var(--blue); }
+  .t-badge.oi{ background:var(--red-soft); color:var(--red); }
+  .t-badge.moi{ background:var(--amber-soft); color:var(--amber); }
+
+  .c-status{ }
+  .st-sel{
+    width:100%; padding:5px 22px 5px 8px; border:1px solid var(--border); border-radius:6px;
+    font-size:11px; font-family:'JetBrains Mono',monospace; color:var(--text); background:var(--card);
+    appearance:none; -webkit-appearance:none; cursor:pointer;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'%3E%3Cpath d='M1 1l3 3 3-3' stroke='%2394A3B8' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 6px center;
+  }
+  .st-sel:focus{ outline:none; border-color:var(--blue); }
+  .st-sel.s-working{ border-color:rgba(29,78,216,.3); color:var(--blue); background-color:var(--blue-soft); }
+  .st-sel.s-review{ border-color:rgba(180,83,9,.3); color:var(--amber); background-color:var(--amber-soft); }
+  .st-sel.s-complete{ border-color:rgba(21,128,61,.3); color:var(--green); background-color:var(--green-soft); }
+  .st-sel.s-overdue{ border-color:rgba(185,28,28,.3); color:var(--red); background-color:var(--red-soft); }
+  .st-sel.s-open{ border-color:var(--border); color:var(--text-muted); }
+
+  .c-date{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-faint); }
+  .c-date.ov{ color:var(--red); font-weight:700; }
+
+  .c-oi{ }
+  .oi-pill{ font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; padding:2px 7px; border-radius:4px; }
+  .oi-pill.pending{ background:var(--red-soft); color:var(--red); }
+  .oi-pill.done{ background:var(--green-soft); color:var(--green); }
+
+  .c-open .open-btn{ border:none; background:transparent; color:var(--text-faint); cursor:pointer; font-size:15px; padding:2px 5px; border-radius:5px; }
+  .c-open .open-btn:hover{ background:var(--blue-soft); color:var(--blue); }
+
+  .empty-state{ padding:48px; text-align:center; color:var(--text-faint); font-size:13.5px; line-height:1.7; }
+
+  /* ── Detail Drawer ── */
+  .dw-overlay{ position:fixed; inset:0; background:rgba(15,42,74,0.3); z-index:100; display:none; }
+  .dw-overlay.open{ display:block; }
+  .drawer{
+    position:fixed; right:0; top:0; bottom:0; width:500px; max-width:100vw;
+    background:var(--card); display:flex; flex-direction:column;
+    box-shadow:-12px 0 50px rgba(15,42,74,0.14); z-index:101;
+  }
+  .dw-head{
+    padding:20px 22px 0; border-bottom:1px solid var(--border-soft); flex-shrink:0;
+    background:linear-gradient(180deg,#FBFCFE,#FFFFFF);
+  }
+  .dw-toprow{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:12px; }
+  .dw-crumb{ font-family:'JetBrains Mono',monospace; font-size:9.5px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.06em; margin-bottom:4px; }
+  .dw-code{ font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700; color:var(--blue); margin-bottom:4px; }
+  .dw-title{ font-family:'Manrope',sans-serif; font-weight:700; font-size:15px; color:var(--navy); line-height:1.35; }
+  .dw-close{ border:none; background:var(--slate-soft); color:var(--text-muted); width:28px; height:28px; border-radius:8px; cursor:pointer; font-size:14px; flex-shrink:0; }
+  .dw-close:hover{ background:var(--border); }
+  .dw-tabs{ display:flex; }
+  .dw-tab{ font-family:'JetBrains Mono',monospace; font-size:11px; padding:9px 16px; cursor:pointer; border-bottom:2px solid transparent; color:var(--text-faint); letter-spacing:.04em; }
+  .dw-tab.active{ color:var(--blue); border-bottom-color:var(--blue); }
+  .dw-tab:hover:not(.active){ color:var(--text-muted); }
+  .dw-body{ flex:1; overflow-y:auto; padding:22px; }
+
+  .dw-lbl{ font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--text-faint); margin-bottom:8px; }
+  .dw-section{ margin-bottom:22px; }
+
+  .dw-status-row{ display:flex; align-items:center; gap:10px; }
+  .dw-st-sel{
+    flex:1; padding:9px 30px 9px 12px; border:1px solid var(--border); border-radius:8px;
+    font-size:13px; font-family:inherit; color:var(--text); background:var(--card);
+    appearance:none; -webkit-appearance:none; cursor:pointer;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7' viewBox='0 0 11 7'%3E%3Cpath d='M1 1l4.5 4.5L10 1' stroke='%2394A3B8' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 11px center;
+  }
+  .dw-st-sel:focus{ outline:none; border-color:var(--blue); }
+  .dw-save{ padding:9px 18px; border:none; border-radius:8px; background:var(--blue); color:#fff; font-weight:600; font-size:13px; cursor:pointer; font-family:inherit; white-space:nowrap; }
+  .dw-save:hover{ filter:brightness(1.07); }
+  .dw-save:disabled{ opacity:.5; cursor:default; }
+  .dw-save.saved{ background:var(--green); }
+  .dw-fb{ font-size:12px; color:var(--text-muted); margin-top:7px; min-height:1.1em; }
+  .dw-fb.err{ color:var(--red); }
+
+  .dw-dates{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .dw-date-item label{ display:block; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--text-faint); margin-bottom:4px; }
+  .dw-date-item span{ font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--text-muted); }
+  .dw-date-item span.ov{ color:var(--red); font-weight:700; }
+
+  .dw-desc-box{ font-size:13px; color:var(--text); line-height:1.6; background:#FAFBFD; padding:12px 14px; border-radius:8px; border:1px solid var(--border-soft); white-space:pre-wrap; word-break:break-word; }
+  .dw-desc-empty{ font-size:12.5px; color:var(--text-faint); font-style:italic; }
+
+  .dw-oi-list{ display:flex; flex-direction:column; gap:7px; }
+  .dw-oi-item{ display:flex; align-items:center; gap:9px; padding:9px 12px; border:1px solid var(--border-soft); border-radius:8px; background:#FAFBFD; cursor:pointer; }
+  .dw-oi-item:hover{ background:var(--blue-soft); }
+  .dw-oi-code{ font-family:'JetBrains Mono',monospace; font-size:10.5px; font-weight:700; color:var(--red); background:var(--red-soft); padding:2px 6px; border-radius:4px; flex-shrink:0; }
+  .dw-oi-title{ font-size:12.5px; color:var(--text); flex:1; }
+  .dw-oi-status{ font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--text-faint); flex-shrink:0; }
+  .dw-oi-arrow{ color:var(--text-faint); font-size:12px; flex-shrink:0; }
+
+  /* comments */
+  .cmt-feed{ display:flex; flex-direction:column; gap:10px; margin-bottom:18px; min-height:32px; }
+  .cmt-item{ padding:12px 14px; border:1px solid var(--border-soft); border-radius:10px; background:#FAFBFD; }
+  .cmt-meta{ font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--text-faint); margin-bottom:5px; }
+  .cmt-meta b{ color:var(--text-muted); }
+  .cmt-text{ font-size:13px; color:var(--text); line-height:1.55; white-space:pre-wrap; word-break:break-word; }
+  .cmt-empty{ font-size:12.5px; color:var(--text-faint); font-style:italic; }
+  .cmt-loading{ font-size:12px; color:var(--text-faint); }
+  .cmt-area{ width:100%; padding:9px 11px; border:1px solid var(--border); border-radius:8px; font-size:13px; font-family:inherit; color:var(--text); resize:vertical; min-height:76px; }
+  .cmt-area:focus{ outline:none; border-color:var(--blue); }
+  .cmt-post{ margin-top:8px; padding:8px 18px; border:none; border-radius:8px; background:var(--navy); color:#fff; font-weight:600; font-size:12.5px; cursor:pointer; font-family:inherit; }
+  .cmt-post:hover{ filter:brightness(1.3); }
+  .cmt-post:disabled{ opacity:.5; cursor:default; }
+
+  /* ── View-as banner (System Manager impersonation) ── */
+  .viewas-banner{
+    background:var(--amber-soft); border-bottom:1px solid rgba(180,83,9,.2);
+    padding:9px 28px; display:flex; align-items:center; gap:10px;
+    font-size:12.5px; color:var(--amber); flex-shrink:0;
+  }
+  .viewas-icon{ font-size:15px; flex-shrink:0; }
+  .viewas-name{ font-weight:700; }
+  .viewas-reset{
+    font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600;
+    padding:4px 12px; border:1px solid rgba(180,83,9,.3); border-radius:6px;
+    background:var(--card); color:var(--amber); cursor:pointer; margin-left:auto; flex-shrink:0;
+  }
+  .viewas-reset:hover{ background:var(--amber); color:#fff; }
+
+  /* ── Assignment filter banner ── */
+  .assign-banner{
+    background:var(--blue-soft); border-bottom:1px solid rgba(29,78,216,.18);
+    padding:9px 28px; display:flex; align-items:center; gap:12px;
+    font-size:12.5px; color:var(--blue); flex-shrink:0;
+  }
+  .assign-banner-icon{ font-size:14px; flex-shrink:0; }
+  .assign-banner-text{ flex:1; }
+  .assign-banner-btn{
+    font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600;
+    padding:4px 12px; border:1px solid rgba(29,78,216,.3); border-radius:6px;
+    background:var(--card); color:var(--blue); cursor:pointer; flex-shrink:0;
+  }
+  .assign-banner-btn:hover{ background:var(--blue); color:#fff; }
+
+  /* ── Module assigned-to-me badge ── */
+  .mod-my-badge{
+    font-family:'JetBrains Mono',monospace; font-size:9.5px; font-weight:700;
+    background:var(--green-soft); color:var(--green); padding:2px 7px; border-radius:4px;
+    flex-shrink:0;
+  }
+
+  @media(max-width:900px){
+    .header,.toolbar,.main,.kpi-strip{ padding-left:16px; padding-right:16px; }
+    .t-head,.t-row{ grid-template-columns:92px 1fr 60px 140px; }
+    .oi-row{ grid-template-columns:76px 1fr 60px 140px; padding-left:20px; }
+    .t-head > *:nth-child(n+5),.t-row > *:nth-child(n+5),.oi-row > *:nth-child(n+5){ display:none; }
+    .drawer{ width:100vw; }
+    .kpi-chip + .kpi-chip{ padding-left:12px; }
+    .kpi-chip{ padding-right:12px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Login overlay -->
+<div class="login-screen" id="loginScreen">
+  <form class="login-card" id="loginForm">
+    <div class="login-eyebrow">Akhilam Consulting · ERP Implementation</div>
+    <h2 class="login-title">Consultant Workspace</h2>
+    <div class="login-sub">Sign in with your ERPNext account to manage tasks, update statuses and add comments.</div>
+    <label class="login-label" for="lUsr">Username or email</label>
+    <input class="login-input" id="lUsr" type="text" autocomplete="username" required>
+    <label class="login-label" for="lPwd">Password</label>
+    <input class="login-input" id="lPwd" type="password" autocomplete="current-password" required>
+    <div class="login-error" id="lErr"></div>
+    <button class="login-submit" id="lSubmit" type="submit">Sign in</button>
+    <div class="login-client-link">Viewing as a client? <a href="/">Client dashboard →</a></div>
+  </form>
+</div>
+
+<!-- App -->
+<div class="app" id="appWrap" style="display:none;">
+
+  <header class="header">
+    <div class="header-logo">AK</div>
+    <div class="header-brand">
+      <div class="header-name">Akhilam Consulting</div>
+      <div class="header-sub">Pioneer Foundation Engineering · ERP Implementation Workspace</div>
+    </div>
+    <div class="header-actions">
+      <a class="header-link" href="/">Client Dashboard →</a>
+      <button class="header-signout" id="signoutBtn" type="button">Sign out</button>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <div class="tool-group" id="secTabs">
+      <div class="tool-pill active" data-sec="all">ALL</div>
+      <div class="tool-pill" data-sec="hr">HR</div>
+      <div class="tool-pill" data-sec="tender">TENDER</div>
+    </div>
+    <div class="tool-sep"></div>
+    <div class="tool-group" id="typeTabs">
+      <div class="tool-pill active" data-type="all">ALL TYPES</div>
+      <div class="tool-pill" data-type="fr">FR ONLY</div>
+      <div class="tool-pill" data-type="oi">OI ONLY</div>
+    </div>
+    <div class="tool-sep"></div>
+    <select class="tool-select" id="stFilter">
+      <option value="all">All statuses</option>
+      <option value="Open">Open</option>
+      <option value="Working">Working</option>
+      <option value="Pending Review">Pending Review</option>
+      <option value="Rework">Rework</option>
+      <option value="Overdue">Overdue</option>
+      <option value="Completed">Completed</option>
+      <option value="Cancelled">Cancelled</option>
+    </select>
+    <div class="tool-spacer"></div>
+    <!-- View-as control — only visible to System Managers -->
+    <div id="viewAsWrap" style="display:none; align-items:center; gap:6px;">
+      <span style="font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--text-faint); letter-spacing:.04em; white-space:nowrap;">VIEW AS</span>
+      <select class="tool-select" id="viewAsSel" style="width:170px;"></select>
+    </div>
+    <input class="tool-search" type="search" id="searchBox" placeholder="Search by code or title…">
+    <button class="tool-refresh" id="refreshBtn">↻ Refresh</button>
+  </div>
+
+  <div class="kpi-strip">
+    <div class="kpi-chip"><span class="kpi-num" id="kTotal">—</span><span class="kpi-lbl">FRs total</span></div>
+    <div class="kpi-chip"><span class="kpi-num green" id="kDone">—</span><span class="kpi-lbl">Completed</span></div>
+    <div class="kpi-chip"><span class="kpi-num blue" id="kProg">—</span><span class="kpi-lbl">In progress</span></div>
+    <div class="kpi-chip"><span class="kpi-num amber" id="kOi">—</span><span class="kpi-lbl">OIs open</span></div>
+    <div class="kpi-chip"><span class="kpi-num red" id="kOv">—</span><span class="kpi-lbl">Overdue</span></div>
+    <div class="kpi-chip"><span class="kpi-num" id="kAct">—</span><span class="kpi-lbl">Active this week</span></div>
+  </div>
+
+  <!-- View-as mode banner (amber) — shown when a System Manager is impersonating a user -->
+  <div class="viewas-banner" id="viewAsBanner" style="display:none;">
+    <span class="viewas-icon">👁</span>
+    <span>Viewing workspace as <span class="viewas-name" id="viewAsNameLabel">—</span></span>
+    <button class="viewas-reset" onclick="resetViewAs()">Reset to my view</button>
+  </div>
+
+  <!-- Assignment filter banner (blue) — shown when the logged-in user has assigned modules -->
+  <div class="assign-banner" id="assignBanner" style="display:none;">
+    <span class="assign-banner-icon">⊙</span>
+    <span class="assign-banner-text" id="assignBannerText">Showing modules assigned to you</span>
+    <button class="assign-banner-btn" id="assignBannerBtn" onclick="clearMyFilter()">Show all</button>
+  </div>
+
+  <div class="main" id="main">
+    <div class="empty-state" id="loadState">Loading tasks from ERPNext…</div>
+  </div>
+</div>
+
+<!-- Detail drawer -->
+<div class="dw-overlay" id="dwOverlay"></div>
+<div class="drawer" id="drawer" style="display:none;">
+  <div class="dw-head">
+    <div class="dw-toprow">
+      <div>
+        <div class="dw-crumb" id="dwCrumb">—</div>
+        <div class="dw-code" id="dwCode">—</div>
+        <div class="dw-title" id="dwTitle">—</div>
+      </div>
+      <button class="dw-close" id="dwClose">✕</button>
+    </div>
+    <div class="dw-tabs">
+      <div class="dw-tab active" data-tab="details">DETAILS</div>
+      <div class="dw-tab" data-tab="comments">COMMENTS</div>
+    </div>
+  </div>
+  <div class="dw-body">
+    <!-- Details panel -->
+    <div id="panDetails">
+      <div class="dw-section">
+        <div class="dw-lbl">Status</div>
+        <div class="dw-status-row">
+          <select class="dw-st-sel" id="dwStSel">
+            <option>Open</option><option>Working</option><option>Pending Review</option>
+            <option>Rework</option><option>Overdue</option><option>Completed</option><option>Cancelled</option>
+          </select>
+          <button class="dw-save" id="dwSave">Save</button>
+        </div>
+        <div class="dw-fb" id="dwStFb"></div>
+      </div>
+      <div class="dw-section">
+        <div class="dw-lbl">Dates</div>
+        <div class="dw-dates" id="dwDates"></div>
+      </div>
+      <div class="dw-section" id="dwDescSec">
+        <div class="dw-lbl">Description</div>
+        <div id="dwDescBody"></div>
+      </div>
+      <div class="dw-section" id="dwOiSec" style="display:none;">
+        <div class="dw-lbl">Open Items (<span id="dwOiCnt">0</span>)</div>
+        <div class="dw-oi-list" id="dwOiList"></div>
+      </div>
+    </div>
+    <!-- Comments panel -->
+    <div id="panComments" style="display:none;">
+      <div class="dw-section">
+        <div class="dw-lbl">Comments</div>
+        <div class="cmt-feed" id="cmtFeed"><div class="cmt-loading">Loading…</div></div>
+      </div>
+      <div class="dw-section">
+        <div class="dw-lbl">Add a comment</div>
+        <textarea class="cmt-area" id="cmtText" placeholder="Write a comment…" maxlength="2000"></textarea>
+        <button class="cmt-post" id="cmtPost">Post Comment</button>
+        <div class="dw-fb" id="cmtFb"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────
+let cData = null;         // loaded from API
+let activeTask = null;    // task open in drawer: { task, type, mod, section, sectionLabel, parentFr? }
+const openMods = new Set(); // persists open/closed state of module groups across re-renders
+let isFirstRender = true;
+
+let fSec    = 'all';
+let fType   = 'all';
+let fStatus = 'all';
+let fSearch = '';
+
+// ── Assignment filter ──────────────────────────────────────────
+let myAssignedModules = new Set(); // `${sec}:${taskName}` for modules assigned to active user
+let filterMyModules   = false;
+
+// ── View-as (System Manager only) ─────────────────────────────
+let viewAsEmail = null;
+let viewAsName  = null;
+let _viewAsResources = null;
+
+function applyAssignmentFilter(data) {
+  myAssignedModules = new Set();
+  const me = data.currentUser;
+  if (!me) return;
+  ['hr', 'tender'].forEach(k => {
+    (data[k].modules || []).forEach(m => {
+      if ((m.assignees || []).includes(me)) {
+        myAssignedModules.add(`${k}:${m.taskName}`);
+      }
+    });
+  });
+  filterMyModules = myAssignedModules.size > 0;
+}
+
+function applyViewAsFilter(email) {
+  myAssignedModules = new Set();
+  if (!cData || !email) return;
+  ['hr', 'tender'].forEach(k => {
+    (cData[k].modules || []).forEach(m => {
+      if ((m.assignees || []).includes(email)) {
+        myAssignedModules.add(`${k}:${m.taskName}`);
+      }
+    });
+  });
+  filterMyModules = myAssignedModules.size > 0;
+}
+
+async function initViewAsControl() {
+  if (!cData?.isSystemManager) return;
+
+  const wrap = document.getElementById('viewAsWrap');
+  if (wrap) wrap.style.display = 'flex';
+
+  try {
+    const res = await fetch('/.netlify/functions/get-project-resources', { credentials: 'same-origin' });
+    const json = await res.json();
+    _viewAsResources = res.ok ? (json.resources || []) : [];
+  } catch { _viewAsResources = []; }
+
+  const sel = document.getElementById('viewAsSel');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">— select user to preview —</option>' +
+    (_viewAsResources || []).map(r =>
+      `<option value="${r.email}">${r.name}${r.role ? ' · ' + r.role : ''}</option>`
+    ).join('');
+
+  sel.addEventListener('change', () => {
+    const email = sel.value;
+    if (!email) {
+      resetViewAs(false); // keep select value
+    } else {
+      const r = (_viewAsResources || []).find(r => r.email === email);
+      viewAsEmail = email;
+      viewAsName  = r ? r.name : email;
+      applyViewAsFilter(email);
+      updateViewAsBanner();
+      render();
+    }
+  });
+}
+
+function updateViewAsBanner() {
+  const banner = document.getElementById('viewAsBanner');
+  const label  = document.getElementById('viewAsNameLabel');
+  if (!banner) return;
+  if (viewAsEmail) {
+    banner.style.display = 'flex';
+    if (label) label.textContent = viewAsName || viewAsEmail;
+  } else {
+    banner.style.display = 'none';
+  }
+}
+
+function resetViewAs(resetSel = true) {
+  viewAsEmail = null;
+  viewAsName  = null;
+  if (resetSel) {
+    const sel = document.getElementById('viewAsSel');
+    if (sel) sel.value = '';
+  }
+  applyAssignmentFilter(cData);
+  updateViewAsBanner();
+  render();
+}
+
+function clearMyFilter() {
+  filterMyModules = false;
+  render();
+}
+
+// ── Helpers ────────────────────────────────────────────────────
+function fmt(d){ return d || '—'; }
+function today(){ return new Date().toISOString().slice(0,10); }
+
+function stClass(s){
+  if (s === 'Working')                       return 's-working';
+  if (s === 'Pending Review' || s === 'Rework') return 's-review';
+  if (s === 'Completed')                     return 's-complete';
+  if (s === 'Overdue')                       return 's-overdue';
+  return 's-open';
+}
+
+function stOpts(cur){
+  return ['Open','Working','Pending Review','Rework','Overdue','Completed','Cancelled']
+    .map(s=>`<option${s===cur?' selected':''}>${s}</option>`).join('');
+}
+
+// ── Filter logic ───────────────────────────────────────────────
+function frMatch(fr){
+  if (fType === 'oi') return false;
+  if (fStatus !== 'all' && fr.status !== fStatus) return false;
+  if (fSearch){
+    const q = fSearch.toLowerCase();
+    if (!fr.code.toLowerCase().includes(q) && !fr.title.toLowerCase().includes(q)) return false;
+  }
+  return true;
+}
+function oiMatch(oi){
+  if (fType === 'fr') return false;
+  if (fStatus !== 'all' && oi.status !== fStatus) return false;
+  if (fSearch){
+    const q = fSearch.toLowerCase();
+    if (!oi.code.toLowerCase().includes(q) && !oi.title.toLowerCase().includes(q)) return false;
+  }
+  return true;
+}
+
+// ── Render ─────────────────────────────────────────────────────
+function render(){
+  if (!cData) return;
+  const { hr, tender, summary } = cData;
+
+  document.getElementById('kTotal').textContent = summary.totalFr;
+  document.getElementById('kDone').textContent  = summary.completedFr;
+  document.getElementById('kProg').textContent  = summary.inProgressFr;
+  document.getElementById('kOi').textContent    = summary.openOi;
+  document.getElementById('kOv').textContent    = summary.overdueCount;
+  document.getElementById('kAct').textContent   = summary.activeCount;
+
+  // Assignment filter banner — hide when in view-as mode (viewas banner covers it)
+  const banner = document.getElementById('assignBanner');
+  if (filterMyModules && !viewAsEmail) {
+    banner.style.display = 'flex';
+  } else {
+    banner.style.display = 'none';
+  }
+
+  const td = today();
+  const sections = [
+    { key:'hr',     data:hr     },
+    { key:'tender', data:tender },
+  ];
+
+  let html = '';
+  let any  = false;
+
+  sections.forEach(({ key, data:sec }) => {
+    if (fSec !== 'all' && fSec !== key) return;
+
+    sec.modules.forEach(mod => {
+      const modKey = `${key}:${mod.taskName}`;
+
+      // Skip unassigned modules when filter is active
+      if (filterMyModules && !myAssignedModules.has(modKey)) return;
+
+      const rows = [];
+
+      mod.frs.forEach(fr => {
+        const frShows = frMatch(fr);
+        const matchOi = mod.frs.length > 0 ? fr.oi.filter(oiMatch) : [];
+        // always show FR row if the FR matches OR if any of its OIs match
+        const showFrRow = frShows || matchOi.length > 0;
+        if (!showFrRow) return;
+
+        rows.push(frRow(key, mod.taskName, fr, td, frShows));
+
+        if (fType !== 'fr'){
+          fr.oi.filter(oiMatch).forEach(oi => {
+            rows.push(oiRow(key, mod.taskName, fr.taskName, oi, false, td));
+          });
+        }
+      });
+
+      // module-level OIs
+      if (fType !== 'fr'){
+        mod.moduleOi.filter(oiMatch).forEach(oi => {
+          rows.push(oiRow(key, mod.taskName, null, oi, true, td));
+        });
+      }
+
+      if (!rows.length) return;
+      any = true;
+
+      const frDone = mod.frs.filter(f=>f.status==='Completed').length;
+      const secLabel = key === 'hr' ? 'HR' : 'TN';
+      const openAttr = openMods.has(modKey) || isFirstRender ? ' open' : '';
+      const isMyMod = myAssignedModules.has(modKey);
+      const badgeLabel = viewAsEmail ? `assigned to ${viewAsName || viewAsEmail}` : 'assigned to you';
+      const myBadge = isMyMod ? `<span class="mod-my-badge">${badgeLabel}</span>` : '';
+
+      html += `
+        <div class="mod-group${openAttr}" data-mod="${modKey}">
+          <div class="mod-head" onclick="toggleMod(this)">
+            <span class="mod-chevron">▶</span>
+            <span class="sec-badge ${key}">${secLabel}</span>
+            <span class="mod-name">${mod.name}</span>
+            ${myBadge}
+            <span class="mod-meta">${frDone}/${mod.frs.length} FR done · ${mod.moduleOi.length} module OI</span>
+          </div>
+          <div class="mod-body">
+            <div class="task-table">
+              <div class="t-head"><div>CODE</div><div>TITLE</div><div>TYPE</div><div>STATUS</div><div>DUE DATE</div><div>OI</div><div></div></div>
+              ${rows.join('')}
+            </div>
+          </div>
+        </div>`;
+    });
+  });
+
+  const main = document.getElementById('main');
+  main.innerHTML = any ? html : `<div class="empty-state">No tasks match the current filters.</div>`;
+
+  // Sync open state on first render
+  if (isFirstRender){
+    document.querySelectorAll('.mod-group').forEach(g => openMods.add(g.dataset.mod));
+    isFirstRender = false;
+  }
+}
+
+function frRow(sec, modTn, fr, td, dimmed){
+  const oiPending = fr.oi.filter(o=>!['Completed','Cancelled'].includes(o.status)).length;
+  const oiBadge = fr.oi.length
+    ? `<span class="oi-pill ${oiPending?'pending':'done'}">${oiPending?oiPending+' open':'✓ clear'}</span>`
+    : '<span style="color:var(--text-faint);font-size:10px;font-family:\'JetBrains Mono\',monospace">—</span>';
+  const rowCls = dimmed ? 't-row' : 't-row';
+  const activeDot  = fr.isActive  ? '<span class="dot-active"  title="Active this week"></span>' : '';
+  const overdueDot = fr.isOverdue ? '<span class="dot-overdue" title="Overdue"></span>'          : '';
+  const dateCls = fr.endDate && fr.endDate < td && fr.status !== 'Completed' ? ' ov' : '';
+  const tn = fr.taskName;
+  return `
+    <div class="${rowCls}" data-tn="${tn}" data-sec="${sec}" data-mod-tn="${modTn}" data-fr-tn="${tn}" data-oi-tn="">
+      <div class="c-code fr">${fr.code}</div>
+      <div class="c-title"><span class="c-title-text" title="${fr.title}">${fr.title}</span>${activeDot}${overdueDot}</div>
+      <div class="c-type"><span class="t-badge fr">FR</span></div>
+      <div class="c-status">
+        <select class="st-sel ${stClass(fr.status)}" data-tn="${tn}" onclick="event.stopPropagation()" onchange="inlineSave(event)">
+          ${stOpts(fr.status)}
+        </select>
+      </div>
+      <div class="c-date${dateCls}">${fmt(fr.endDate)}</div>
+      <div class="c-oi">${oiBadge}</div>
+      <div class="c-open"><button class="open-btn" title="Open detail" onclick="event.stopPropagation();openRow(this.closest('[data-tn]'))">→</button></div>
+    </div>`;
+}
+
+function oiRow(sec, modTn, frTn, oi, isModLevel, td){
+  const dateCls = oi.endDate && oi.endDate < td && oi.status !== 'Completed' ? ' ov' : '';
+  const codeClass = isModLevel ? 'mod-oi' : 'oi';
+  const badgeClass = isModLevel ? 'moi' : 'oi';
+  const label = isModLevel ? 'MOD-OI' : 'OI';
+  const tn = oi.taskName;
+  return `
+    <div class="oi-row" data-tn="${tn}" data-sec="${sec}" data-mod-tn="${modTn}" data-fr-tn="${frTn||''}" data-oi-tn="${tn}">
+      <div class="c-code ${codeClass}">${oi.code}</div>
+      <div class="c-title"><span class="c-title-text" title="${oi.title}">${oi.title}</span></div>
+      <div class="c-type"><span class="t-badge ${badgeClass}">${label}</span></div>
+      <div class="c-status">
+        <select class="st-sel ${stClass(oi.status)}" data-tn="${tn}" onclick="event.stopPropagation()" onchange="inlineSave(event)">
+          ${stOpts(oi.status)}
+        </select>
+      </div>
+      <div class="c-date${dateCls}">${fmt(oi.endDate)}</div>
+      <div class="c-oi"></div>
+      <div class="c-open"><button class="open-btn" title="Open detail" onclick="event.stopPropagation();openRow(this.closest('[data-tn]'))">→</button></div>
+    </div>`;
+}
+
+// ── Module toggle ──────────────────────────────────────────────
+function toggleMod(head){
+  const g = head.closest('.mod-group');
+  g.classList.toggle('open');
+  const key = g.dataset.mod;
+  if (g.classList.contains('open')) openMods.add(key);
+  else openMods.delete(key);
+}
+
+// ── Row click → drawer ─────────────────────────────────────────
+document.getElementById('main').addEventListener('click', e => {
+  const row = e.target.closest('[data-tn]');
+  if (!row || e.target.tagName === 'SELECT' || e.target.tagName === 'BUTTON') return;
+  openRow(row);
+});
+
+function openRow(row){
+  if (!row) return;
+  const sec    = row.dataset.sec;
+  const modTn  = row.dataset.modTn;
+  const frTn   = row.dataset.frTn;
+  const oiTn   = row.dataset.oiTn;
+  const secData = cData[sec];
+  if (!secData) return;
+  const mod = secData.modules.find(m => m.taskName === modTn);
+  if (!mod) return;
+  const sectionLabel = sec === 'hr' ? 'HR Module' : 'Tender Module';
+
+  let resolved;
+  if (!oiTn){
+    // FR row
+    const fr = mod.frs.find(f => f.taskName === frTn);
+    if (!fr) return;
+    resolved = { task:fr, type:'fr', mod, section:sec, sectionLabel, parentFr:null };
+  } else {
+    const fr = frTn ? mod.frs.find(f => f.taskName === frTn) : null;
+    const oi = fr
+      ? fr.oi.find(o => o.taskName === oiTn)
+      : mod.moduleOi.find(o => o.taskName === oiTn);
+    if (!oi) return;
+    resolved = { task:oi, type:'oi', mod, section:sec, sectionLabel, parentFr:fr };
+  }
+  openDrawer(resolved);
+}
+
+// ── Inline status save ─────────────────────────────────────────
+async function inlineSave(e){
+  const sel = e.target;
+  const taskName  = sel.dataset.tn;
+  const newStatus = sel.value;
+  const oldStatus = [...sel.options].find(o=>o.defaultSelected)?.value || 'Open';
+  sel.className = `st-sel ${stClass(newStatus)}`;
+  sel.disabled = true;
+  try {
+    const res = await fetch('/.netlify/functions/task-update',{
+      method:'POST', credentials:'same-origin',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ taskName, fields:{ status:newStatus } }),
+    });
+    const body = await res.json();
+    if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`);
+    patchStatus(taskName, newStatus);
+    // keep new selection as default
+    [...sel.options].forEach(o => { o.defaultSelected = o.value === newStatus; });
+    if (activeTask && activeTask.task.taskName === taskName){
+      document.getElementById('dwStSel').value = newStatus;
+      activeTask.task.status = newStatus;
+    }
+  } catch (err) {
+    console.error('Inline status failed:', err.message);
+    sel.value = oldStatus;
+    sel.className = `st-sel ${stClass(oldStatus)}`;
+    showToast('Status update failed: ' + err.message, 'error');
+  } finally {
+    sel.disabled = false;
+  }
+}
+
+function patchStatus(taskName, newStatus){
+  if (!cData) return;
+  ['hr','tender'].forEach(k => {
+    cData[k].modules.forEach(m => {
+      m.frs.forEach(f => {
+        if (f.taskName === taskName) f.status = newStatus;
+        f.oi.forEach(o => { if (o.taskName === taskName) o.status = newStatus; });
+      });
+      m.moduleOi.forEach(o => { if (o.taskName === taskName) o.status = newStatus; });
+    });
+  });
+  recomputeSummary();
+}
+
+function recomputeSummary(){
+  if (!cData) return;
+  const allFrs = ['hr','tender'].flatMap(k => cData[k].modules.flatMap(m=>m.frs));
+  const allOis = ['hr','tender'].flatMap(k => cData[k].modules.flatMap(m=>[...m.moduleOi,...m.frs.flatMap(f=>f.oi)]));
+  cData.summary.completedFr  = allFrs.filter(f=>f.status==='Completed').length;
+  cData.summary.inProgressFr = allFrs.filter(f=>['Working','Pending Review','Rework'].includes(f.status)).length;
+  cData.summary.openOi       = allOis.filter(o=>!['Completed','Cancelled'].includes(o.status)).length;
+}
+
+// ── Drawer ─────────────────────────────────────────────────────
+const dwOverlay = document.getElementById('dwOverlay');
+const drawer    = document.getElementById('drawer');
+
+function openDrawer(resolved){
+  activeTask = resolved;
+  const { task, type, mod, section, sectionLabel, parentFr } = resolved;
+
+  // breadcrumb
+  let crumb = sectionLabel + ' › ' + mod.name;
+  if (type === 'oi' && parentFr) crumb += ' › ' + parentFr.code;
+  else if (type === 'oi')        crumb += ' (module-level)';
+
+  document.getElementById('dwCrumb').textContent  = crumb;
+  document.getElementById('dwCode').textContent   = task.code;
+  document.getElementById('dwTitle').textContent  = task.title;
+  document.getElementById('dwStSel').value        = task.status || 'Open';
+  document.getElementById('dwStFb').textContent   = '';
+  document.getElementById('dwStFb').className     = 'dw-fb';
+  document.getElementById('dwSave').textContent   = 'Save';
+  document.getElementById('dwSave').classList.remove('saved');
+
+  // dates
+  const td = today();
+  const startVal = task.startDate || '—';
+  const endVal   = task.endDate   || '—';
+  const endOv    = task.endDate && task.endDate < td && task.status !== 'Completed';
+  document.getElementById('dwDates').innerHTML = `
+    <div class="dw-date-item"><label>Start date</label><span>${startVal}</span></div>
+    <div class="dw-date-item"><label>Due date</label><span class="${endOv?'ov':''}">${endVal}${endOv?' ⚠':''}</span></div>`;
+
+  // description
+  const descEl = document.getElementById('dwDescBody');
+  if (task.description){
+    const stripped = task.description.replace(/<[^>]*>/g, '').trim();
+    const box = document.createElement('div');
+    box.className = 'dw-desc-box';
+    box.textContent = stripped;
+    descEl.innerHTML = '';
+    descEl.appendChild(box);
+  } else {
+    descEl.innerHTML = '<div class="dw-desc-empty">No description in ERPNext.</div>';
+  }
+
+  // OI sub-list (FR only)
+  const oiSec = document.getElementById('dwOiSec');
+  if (type === 'fr' && task.oi.length){
+    oiSec.style.display = '';
+    document.getElementById('dwOiCnt').textContent = task.oi.length;
+    document.getElementById('dwOiList').innerHTML = task.oi.map(o=>`
+      <div class="dw-oi-item" onclick="openOiFromDrawer('${o.taskName}','${resolved.section}','${mod.taskName}','${task.taskName}')">
+        <span class="dw-oi-code">${o.code}</span>
+        <span class="dw-oi-title">${o.title}</span>
+        <span class="dw-oi-status">${o.status}</span>
+        <span class="dw-oi-arrow">→</span>
+      </div>`).join('');
+  } else { oiSec.style.display = 'none'; }
+
+  switchTab('details');
+  dwOverlay.classList.add('open');
+  drawer.style.display = 'flex';
+  document.getElementById('cmtText').value = '';
+  document.getElementById('cmtFb').textContent = '';
+}
+
+function openOiFromDrawer(oiTn, sec, modTn, frTn){
+  const secData = cData[sec];
+  const mod = secData.modules.find(m=>m.taskName===modTn);
+  const fr  = mod.frs.find(f=>f.taskName===frTn);
+  const oi  = fr.oi.find(o=>o.taskName===oiTn);
+  if (oi) openDrawer({ task:oi, type:'oi', mod, section:sec, sectionLabel:sec==='hr'?'HR Module':'Tender Module', parentFr:fr });
+}
+
+function closeDrawer(){
+  dwOverlay.classList.remove('open');
+  drawer.style.display = 'none';
+  activeTask = null;
+}
+
+document.getElementById('dwClose').addEventListener('click', closeDrawer);
+dwOverlay.addEventListener('click', closeDrawer);
+document.addEventListener('keydown', e=>{ if(e.key==='Escape' && drawer.style.display!=='none') closeDrawer(); });
+
+function switchTab(tab){
+  document.querySelectorAll('.dw-tab').forEach(t => t.classList.toggle('active', t.dataset.tab===tab));
+  document.getElementById('panDetails').style.display  = tab==='details'  ? '' : 'none';
+  document.getElementById('panComments').style.display = tab==='comments' ? '' : 'none';
+  if (tab === 'comments' && activeTask) loadComments(activeTask.task.taskName);
+}
+document.querySelectorAll('.dw-tab').forEach(t => t.addEventListener('click', ()=>switchTab(t.dataset.tab)));
+
+// save status from drawer
+document.getElementById('dwSave').addEventListener('click', async ()=>{
+  if (!activeTask) return;
+  const newSt = document.getElementById('dwStSel').value;
+  const btn   = document.getElementById('dwSave');
+  const fb    = document.getElementById('dwStFb');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  fb.textContent = ''; fb.className = 'dw-fb';
+  try {
+    const res = await fetch('/.netlify/functions/task-update',{
+      method:'POST', credentials:'same-origin',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ taskName:activeTask.task.taskName, fields:{ status:newSt } }),
+    });
+    const body = await res.json();
+    if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`);
+    btn.classList.add('saved'); btn.textContent = '✓ Saved';
+    fb.textContent = 'Updated in ERPNext.';
+    activeTask.task.status = newSt;
+    patchStatus(activeTask.task.taskName, newSt);
+    render();
+    setTimeout(()=>{ btn.classList.remove('saved'); btn.textContent = 'Save'; }, 2500);
+  } catch(err){
+    fb.textContent = err.message; fb.classList.add('err');
+    btn.textContent = 'Save';
+  } finally { btn.disabled = false; }
+});
+
+// ── Comments ───────────────────────────────────────────────────
+async function loadComments(taskName){
+  const feed = document.getElementById('cmtFeed');
+  feed.innerHTML = '<div class="cmt-loading">Loading comments…</div>';
+  try {
+    const res  = await fetch(`/.netlify/functions/task-comments?task=${encodeURIComponent(taskName)}`,{credentials:'same-origin'});
+    const body = await res.json();
+    if (!res.ok) throw new Error(body.error||`HTTP ${res.status}`);
+    const cmts = body.comments||[];
+    if (!cmts.length){ feed.innerHTML='<div class="cmt-empty">No comments yet.</div>'; return; }
+    feed.innerHTML = '';
+    cmts.forEach(c=>{
+      const d = new Date(c.creation||'').toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+      const el = document.createElement('div'); el.className='cmt-item';
+      const meta = document.createElement('div'); meta.className='cmt-meta';
+      const b = document.createElement('b'); b.textContent=c.owner||'Unknown';
+      meta.appendChild(b); meta.appendChild(document.createTextNode(' · '+d));
+      const txt = document.createElement('div'); txt.className='cmt-text';
+      txt.textContent = c.content||'';
+      el.appendChild(meta); el.appendChild(txt); feed.appendChild(el);
+    });
+  } catch(err){
+    document.getElementById('cmtFeed').innerHTML=`<div class="cmt-empty">Could not load: ${err.message}</div>`;
+  }
+}
+
+document.getElementById('cmtPost').addEventListener('click', async ()=>{
+  if (!activeTask) return;
+  const content = document.getElementById('cmtText').value.trim();
+  if (!content) return;
+  const btn = document.getElementById('cmtPost');
+  const fb  = document.getElementById('cmtFb');
+  btn.disabled=true; btn.textContent='Posting…';
+  fb.textContent=''; fb.className='dw-fb';
+  try {
+    const res = await fetch('/.netlify/functions/task-comments',{
+      method:'POST', credentials:'same-origin',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ taskName:activeTask.task.taskName, content }),
+    });
+    const body = await res.json();
+    if (!res.ok) throw new Error(body.error||`HTTP ${res.status}`);
+    document.getElementById('cmtText').value='';
+    fb.textContent='Comment posted.';
+    loadComments(activeTask.task.taskName);
+  } catch(err){
+    fb.textContent=err.message; fb.classList.add('err');
+  } finally { btn.disabled=false; btn.textContent='Post Comment'; }
+});
+
+// ── Toast ──────────────────────────────────────────────────────
+function showToast(msg, type){
+  // Simple inline alert fallback
+  console.error(msg);
+}
+
+// ── Filters ────────────────────────────────────────────────────
+document.getElementById('secTabs').addEventListener('click', e=>{
+  const pill = e.target.closest('[data-sec]'); if (!pill) return;
+  document.querySelectorAll('[data-sec]').forEach(p=>p.classList.remove('active'));
+  pill.classList.add('active'); fSec = pill.dataset.sec; render();
+});
+document.getElementById('typeTabs').addEventListener('click', e=>{
+  const pill = e.target.closest('[data-type]'); if (!pill) return;
+  document.querySelectorAll('[data-type]').forEach(p=>p.classList.remove('active'));
+  pill.classList.add('active'); fType = pill.dataset.type; render();
+});
+document.getElementById('stFilter').addEventListener('change', e=>{ fStatus=e.target.value; render(); });
+document.getElementById('searchBox').addEventListener('input',  e=>{ fSearch=e.target.value.trim(); render(); });
+document.getElementById('refreshBtn').addEventListener('click', ()=>loadData());
+
+// ── Auth / load ────────────────────────────────────────────────
+const loginScreen = document.getElementById('loginScreen');
+const appWrap     = document.getElementById('appWrap');
+
+function showLogin(msg){
+  document.getElementById('lErr').textContent = msg||'';
+  loginScreen.style.display = 'flex';
+  appWrap.style.display = 'none';
+}
+function showApp(){
+  loginScreen.style.display = 'none';
+  appWrap.style.display = 'flex';
+}
+
+async function loadData(){
+  isFirstRender = true;
+  document.getElementById('main').innerHTML='<div class="empty-state" id="loadState">Loading tasks from ERPNext…</div>';
+  try {
+    const res  = await fetch('/.netlify/functions/get-consultant-data',{credentials:'same-origin'});
+    if (res.status===401){ showLogin(); return; }
+    const json = await res.json().catch(()=>null);
+    if (!res.ok){
+      const detail = json&&json.error ? json.error : `HTTP ${res.status}`;
+      throw new Error(detail);
+    }
+    cData = json;
+    applyAssignmentFilter(cData);
+    showApp();
+    render();
+    if (cData.isSystemManager) await initViewAsControl();
+  } catch(err){
+    console.error('Load failed:', err.message);
+    showApp();
+    document.getElementById('main').innerHTML=`<div class="empty-state">⚠ Could not load data from ERPNext.<br>${err.message}</div>`;
+  }
+}
+
+document.getElementById('loginForm').addEventListener('submit', async e=>{
+  e.preventDefault();
+  document.getElementById('lErr').textContent='';
+  const btn = document.getElementById('lSubmit');
+  btn.disabled=true; btn.textContent='Signing in…';
+  try {
+    const res = await fetch('/.netlify/functions/login',{
+      method:'POST', credentials:'same-origin',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ usr:document.getElementById('lUsr').value, pwd:document.getElementById('lPwd').value }),
+    });
+    const body = await res.json().catch(()=>({}));
+    if (!res.ok) throw new Error(body.error||`Login failed (${res.status})`);
+    document.getElementById('lPwd').value='';
+    await loadData();
+  } catch(err){
+    document.getElementById('lErr').textContent=err.message;
+  } finally { btn.disabled=false; btn.textContent='Sign in'; }
+});
+
+document.getElementById('signoutBtn').addEventListener('click', async ()=>{
+  try { await fetch('/.netlify/functions/logout',{method:'POST',credentials:'same-origin'}); } finally { cData=null; showLogin(); }
+});
+
+loadData();
+</script>
+</body>
+</html>

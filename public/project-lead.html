@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+  :root{ --gantt-label-w: 260px; }
   :root{
     --bg: #F0F4F9;
     --card: #FFFFFF;
@@ -132,13 +133,22 @@
   .gantt-row.g-fr.hidden{ display:none; }
 
   .g-label{
-    width:220px; flex-shrink:0; padding:0 12px;
+    width:var(--gantt-label-w); flex-shrink:0; padding:0 12px;
     display:flex; align-items:center; gap:6px;
     border-right:1px solid var(--border-soft);
     font-size:12px; color:var(--text);
     position:sticky; left:0; background:inherit; z-index:4;
-    min-height:36px;
+    min-height:36px; overflow:visible;
   }
+
+  /* Drag handle on right edge of label column */
+  .g-resizer{
+    position:absolute; right:-4px; top:0; bottom:0; width:8px;
+    cursor:col-resize; z-index:20; border-radius:3px;
+    transition:background .15s;
+  }
+  .g-resizer:hover{ background:rgba(29,78,216,.3); }
+  .g-resizer.dragging{ background:rgba(29,78,216,.5); }
   .g-label.g-section{ font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--text-faint); }
   .g-label.g-module{ font-size:12.5px; font-weight:600; color:var(--text); cursor:pointer; }
   .g-label.g-module:hover{ color:var(--blue); }
@@ -425,6 +435,122 @@
   .wp-view-btn:hover{ background:var(--blue); color:#fff; }
 
   @media(max-width:700px){ .kpis{ grid-template-columns:repeat(2,1fr); } .view-tab{ padding:9px 12px; font-size:11px; } }
+
+  /* ---- Module allocation ---- */
+  .g-assign-trigger{
+    font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700;
+    padding:2px 6px; border-radius:4px; cursor:pointer; border:1px solid;
+    white-space:nowrap; flex-shrink:0; line-height:1.5; transition:all .12s;
+  }
+  .g-assign-trigger.unassigned{ background:var(--slate-soft); color:var(--text-faint); border-color:var(--border); }
+  .g-assign-trigger.unassigned:hover{ background:var(--blue-soft); color:var(--blue); border-color:var(--blue); }
+  .g-assign-trigger.assigned{ background:var(--blue-soft); color:var(--blue); border-color:rgba(29,78,216,.3); }
+  .g-assign-trigger.assigned:hover{ filter:brightness(.94); }
+
+  .alloc-panel{
+    position:fixed; z-index:400; background:var(--card); border:1px solid var(--border);
+    border-radius:10px; box-shadow:0 12px 48px rgba(15,42,74,0.18); width:300px;
+    animation:fadeSlide .12s ease;
+  }
+  @keyframes fadeSlide{ from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:none} }
+  .alloc-head{
+    padding:12px 14px 10px; border-bottom:1px solid var(--border);
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+  }
+  .alloc-head-title{ font-family:'Manrope',sans-serif; font-weight:700; font-size:13px; color:var(--navy); flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .alloc-head-close{ border:none; background:none; color:var(--text-faint); cursor:pointer; font-size:16px; padding:0 2px; flex-shrink:0; }
+  .alloc-head-close:hover{ color:var(--red); }
+  .alloc-list{ max-height:220px; overflow-y:auto; padding:4px 0; }
+  .alloc-item{ display:flex; align-items:center; gap:10px; padding:8px 14px; cursor:pointer; transition:background .1s; }
+  .alloc-item:hover{ background:var(--slate-soft); }
+  .alloc-item input[type=checkbox]{ width:15px; height:15px; accent-color:var(--blue); cursor:pointer; flex-shrink:0; }
+  .alloc-name{ font-size:13px; color:var(--text); flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; }
+  .alloc-role{ font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--text-faint); margin-top:1px; }
+  .alloc-empty{ padding:18px 14px; font-size:12.5px; color:var(--text-faint); font-style:italic; text-align:center; line-height:1.5; }
+  .alloc-foot{
+    padding:10px 14px; border-top:1px solid var(--border);
+    display:flex; align-items:center; gap:8px;
+  }
+  .alloc-clear{ font-size:12px; color:var(--text-faint); background:none; border:none; cursor:pointer; padding:0; flex-shrink:0; }
+  .alloc-clear:hover{ color:var(--red); }
+  .alloc-fb{ font-size:11px; color:var(--red); flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .alloc-save{ padding:6px 16px; border:none; border-radius:7px; background:var(--blue); color:#fff; font-weight:600; font-size:12px; cursor:pointer; flex-shrink:0; }
+  .alloc-save:hover{ filter:brightness(1.07); }
+  .alloc-save:disabled{ opacity:.5; cursor:default; }
+
+  /* ---- Toast ---- */
+  .lead-toast{
+    position:fixed; bottom:24px; right:24px; z-index:500;
+    background:var(--navy); color:#fff; padding:10px 18px; border-radius:8px;
+    font-size:12.5px; font-family:'JetBrains Mono',monospace;
+    box-shadow:0 8px 30px rgba(0,0,0,.25); pointer-events:none;
+    animation:toastIn .2s ease;
+  }
+  .lead-toast.success{ background:var(--green); }
+  .lead-toast.error{ background:var(--red); }
+  @keyframes toastIn{ from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+
+  /* ---- View-as controls (System Manager only) ---- */
+  .viewas-select{
+    font-family:'JetBrains Mono',monospace; font-size:10.5px;
+    background:rgba(255,255,255,.1); color:rgba(255,255,255,.85);
+    border:1px solid rgba(255,255,255,.2); border-radius:5px;
+    padding:4px 8px; cursor:pointer; outline:none; max-width:175px;
+  }
+  .viewas-select option{ background:var(--navy); color:#fff; }
+  .viewas-banner{
+    background:var(--amber-soft); border-bottom:1px solid rgba(180,83,9,.2);
+    padding:9px 16px; display:flex; align-items:center; gap:10px;
+    font-size:12.5px; color:var(--amber);
+  }
+  .viewas-icon{ font-size:15px; flex-shrink:0; }
+  .viewas-name{ font-weight:700; }
+  .viewas-reset{
+    font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600;
+    padding:4px 12px; border:1px solid rgba(180,83,9,.3); border-radius:6px;
+    background:var(--card); color:var(--amber); cursor:pointer; margin-left:auto; flex-shrink:0;
+  }
+  .viewas-reset:hover{ background:var(--amber); color:#fff; }
+
+  /* ---- PM Assignment Modal ---- */
+  .pm-overlay{
+    position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:500;
+    display:flex; align-items:center; justify-content:center; padding:24px;
+  }
+  .pm-box{
+    background:var(--card); border-radius:var(--radius);
+    box-shadow:0 20px 60px rgba(0,0,0,.25); width:100%; max-width:520px;
+    max-height:80vh; display:flex; flex-direction:column; overflow:hidden;
+  }
+  .pm-head{
+    padding:18px 22px 14px; border-bottom:1px solid var(--border);
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .pm-title{ font-family:'Manrope',sans-serif; font-weight:700; font-size:16px; color:var(--navy); }
+  .pm-close{ border:none; background:none; font-size:18px; color:var(--text-faint); cursor:pointer; padding:2px 5px; border-radius:4px; }
+  .pm-close:hover{ background:var(--red-soft); color:var(--red); }
+  .pm-body{ flex:1; overflow-y:auto; padding:18px 22px; display:flex; flex-direction:column; gap:20px; }
+  .pm-section-label{
+    font-family:'JetBrains Mono',monospace; font-size:10.5px; font-weight:700;
+    text-transform:uppercase; letter-spacing:.06em; color:var(--text-faint);
+    padding-bottom:8px; border-bottom:1px solid var(--border-soft); margin-bottom:4px;
+  }
+  .pm-item{ display:flex; align-items:center; gap:10px; padding:8px 4px; cursor:pointer; border-radius:6px; }
+  .pm-item:hover{ background:var(--slate-soft); }
+  .pm-item input[type=checkbox]{ width:15px; height:15px; accent-color:var(--blue); cursor:pointer; flex-shrink:0; }
+  .pm-name{ font-size:13px; color:var(--text); }
+  .pm-email{ font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--text-faint); margin-top:1px; }
+  .pm-empty{ font-size:12.5px; color:var(--text-faint); font-style:italic; padding:8px 0; }
+  .pm-foot{
+    padding:14px 22px; border-top:1px solid var(--border);
+    display:flex; align-items:center; gap:10px;
+  }
+  .pm-cancel{ padding:8px 18px; border:1px solid var(--border); border-radius:8px; background:var(--card); color:var(--text-muted); font-size:13px; cursor:pointer; }
+  .pm-cancel:hover{ background:var(--slate-soft); }
+  .pm-fb{ flex:1; font-size:11.5px; color:var(--red); }
+  .pm-save{ padding:8px 20px; border:none; border-radius:8px; background:var(--blue); color:#fff; font-weight:600; font-size:13px; cursor:pointer; }
+  .pm-save:hover{ filter:brightness(1.07); }
+  .pm-save:disabled{ opacity:.5; cursor:default; }
 </style>
 </head>
 <body>
@@ -469,9 +595,22 @@
     </div>
     <div class="topbar-right">
       <span class="topbar-stamp" id="topbarStamp">—</span>
+      <div id="viewAsWrap" style="display:none; align-items:center; gap:6px;">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:9.5px;color:rgba(255,255,255,.4);letter-spacing:.04em;white-space:nowrap;">VIEW AS</span>
+        <select class="viewas-select" id="viewAsSel"></select>
+      </div>
       <a class="btn-ghost" href="/">← Client View</a>
+      <a class="btn-ghost" href="/consultant">Consultant View</a>
+      <button class="btn-ghost" id="managePmsBtn" style="display:none;" type="button">Manage PMs</button>
       <button class="btn-ghost" id="logoutBtn" type="button">Sign out</button>
     </div>
+  </div>
+
+  <!-- View-as mode banner (amber) — shown when System Manager is previewing a user's view -->
+  <div id="viewAsBanner" style="display:none;" class="viewas-banner">
+    <span class="viewas-icon">👁</span>
+    <span>Viewing dashboard as <span class="viewas-name" id="viewAsNameLabel">—</span></span>
+    <button class="viewas-reset" onclick="resetViewAs()">Reset to my view</button>
   </div>
 
   <div class="page">
@@ -580,6 +719,25 @@
   </div><!-- /page -->
 </div><!-- /dashboardWrap -->
 
+<!-- Allocation panel (floats over Gantt) -->
+<div id="allocPanel" style="display:none;" class="alloc-panel"></div>
+
+<!-- PM Assignment Modal (full-screen overlay, System Manager only) -->
+<div id="pmOverlay" style="display:none;" class="pm-overlay" onclick="if(event.target===this)closePmModal()">
+  <div class="pm-box">
+    <div class="pm-head">
+      <span class="pm-title">Manage PM Assignments</span>
+      <button class="pm-close" onclick="closePmModal()">✕</button>
+    </div>
+    <div class="pm-body" id="pmBody"><div class="pm-empty">Loading…</div></div>
+    <div class="pm-foot">
+      <button class="pm-cancel" onclick="closePmModal()">Cancel</button>
+      <span class="pm-fb" id="pmFb"></span>
+      <button class="pm-save" id="pmSaveBtn" onclick="savePmAssignments()">Save →</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ---- utility ----
 function esc(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
@@ -608,10 +766,10 @@ function buildGantt(data) {
     if(!minD||d<minD) minD=d;
     if(!maxD||d>maxD) maxD=d;
   }
-  const allMods = [...data.hr.modules, ...data.tender.modules];
+  const allMods = [...(data.hr?.modules || []), ...(data.tender?.modules || [])];
   allMods.forEach(m=>{ upd(m.start); upd(m.end); m.frs.forEach(fr=>{ upd(fr.start); upd(fr.end); }); });
-  upd(data.hr.rootStart); upd(data.hr.rootEnd);
-  upd(data.tender.rootStart); upd(data.tender.rootEnd);
+  upd(data.hr?.rootStart); upd(data.hr?.rootEnd);
+  upd(data.tender?.rootStart); upd(data.tender?.rootEnd);
 
   const today = new Date().toISOString().slice(0,10);
 
@@ -670,7 +828,7 @@ function buildGantt(data) {
 
   // Header row (month ticks)
   html += `<div class="gantt-row">
-    <div class="g-label g-section" style="height:30px;"></div>
+    <div class="g-label g-section" style="height:30px;"><div class="g-resizer" id="ganttResizer"></div></div>
     <div class="g-chart g-header-chart" style="height:30px;">${monthsHtml}${todayPin(todayPct)}</div>
   </div>`;
 
@@ -678,7 +836,7 @@ function buildGantt(data) {
   [
     { group: data.hr, key: 'hr', badge: 'HR' },
     { group: data.tender, key: 'tender', badge: 'TN' },
-  ].forEach(({ group, key, badge }) => {
+  ].filter(({ group }) => group != null).forEach(({ group, key, badge }) => {
     // Section header
     html += `<div class="gantt-row g-section">
       <div class="g-label g-section"><span class="pill pill-${key==='hr'?'blue':'teal'}">${badge}</span> ${esc(group.label)}</div>
@@ -686,8 +844,7 @@ function buildGantt(data) {
     </div>`;
 
     group.modules.forEach((mod, mi) => {
-      const lead = mod.assignments[0] || '—';
-      const leadChip = mod.assignments.length ? `<span class="g-lead-chip ${key}">${esc(lead.split(' ')[0])}</span>` : '';
+      const assignTrigger = assignTriggerHtml(mod, key);
       const done = `${mod.completedFrs}/${mod.totalFrs}`;
 
       // Derive module timeline from FR dates when the module task itself has no dates
@@ -707,7 +864,7 @@ function buildGantt(data) {
         <div class="g-label g-module" data-mod="${key}:${mi}" style="${!hasChildren ? 'cursor:default;' : ''}">
           <span class="g-chevron" style="${!hasChildren ? 'visibility:hidden;' : ''}"">▶</span>
           <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(mod.name)}">${esc(mod.name)}</span>
-          ${leadChip}
+          ${assignTrigger}
           <span style="font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--text-faint);">${done}</span>
         </div>
         <div class="g-chart">
@@ -815,8 +972,8 @@ function computeErpSections(weeklyTasks, data) {
   const thisWeekTasks = sectionFiltered.filter(inThisWeek);
   const inProgress = thisWeekTasks.filter(t => ['Working','Pending Review','Rework'].includes(t.status));
   const pending    = thisWeekTasks.filter(t => ['Open','Overdue'].includes(t.status));
-  const hrMods     = _wpFilter === 'Tender' ? [] : data.hr.modules;
-  const tenderMods = _wpFilter === 'HR'     ? [] : data.tender.modules;
+  const hrMods     = _wpFilter === 'Tender' ? [] : (data.hr?.modules     || []);
+  const tenderMods = _wpFilter === 'HR'     ? [] : (data.tender?.modules || []);
   const allOi = [];
   [...hrMods, ...tenderMods].forEach(m => {
     m.moduleOi.forEach(oi => allOi.push({ ...oi, module: m.name }));
@@ -1177,16 +1334,19 @@ function weekRange(){
 
 // ---- KPI strip ----
 function renderKpis(data, activity){
-  const allMods = [...data.hr.modules, ...data.tender.modules];
+  const allMods = [...(data.hr?.modules || []), ...(data.tender?.modules || [])];
   const totalFr = allMods.reduce((a,m)=>a+m.totalFrs,0);
   const doneFr = allMods.reduce((a,m)=>a+m.completedFrs,0);
   const progFr = allMods.reduce((a,m)=>a+m.inProgressFrs,0);
   const openFr = totalFr - doneFr - progFr;
-  const hrFr = data.hr.modules.reduce((a,m)=>a+m.totalFrs,0);
-  const tFr = data.tender.modules.reduce((a,m)=>a+m.totalFrs,0);
+  const hrFr = data.hr ? data.hr.modules.reduce((a,m)=>a+m.totalFrs,0) : null;
+  const tFr  = data.tender ? data.tender.modules.reduce((a,m)=>a+m.totalFrs,0) : null;
+  const footParts = [];
+  if (hrFr !== null)  footParts.push(`${hrFr} HR`);
+  if (tFr  !== null)  footParts.push(`${tFr} Tender`);
 
   document.getElementById('kTotal').innerHTML = `${totalFr}<span>FRs</span>`;
-  document.getElementById('kTotalFoot').textContent = `${hrFr} HR · ${tFr} Tender`;
+  document.getElementById('kTotalFoot').textContent = footParts.join(' · ') || '—';
   document.getElementById('kDone').innerHTML = `${doneFr}<span>FRs</span>`;
   document.getElementById('kDoneFoot').textContent = totalFr ? `${Math.round(doneFr/totalFr*100)}% complete` : '—';
   document.getElementById('kProg').innerHTML = `${progFr}<span>FRs</span>`;
@@ -1217,7 +1377,36 @@ function setModuleExpanded(modKey, open) {
   });
 }
 
+function attachResizerHandler(){
+  const resizer = document.getElementById('ganttResizer');
+  if (!resizer) return;
+  resizer.addEventListener('mousedown', e => {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startW = parseFloat(
+      getComputedStyle(document.documentElement).getPropertyValue('--gantt-label-w')
+    ) || 260;
+    resizer.classList.add('dragging');
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+    function onMove(e) {
+      const newW = Math.max(140, Math.min(440, startW + (e.clientX - startX)));
+      document.documentElement.style.setProperty('--gantt-label-w', newW + 'px');
+    }
+    function onUp() {
+      resizer.classList.remove('dragging');
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  });
+}
+
 function attachGanttHandlers(){
+  attachResizerHandler();
   // Per-module click toggle
   document.querySelectorAll('[data-mod]').forEach(el => {
     el.addEventListener('click', () => {
@@ -1257,6 +1446,335 @@ function syncExpandBtn() {
   btn.textContent = anyCollapsed ? 'Expand All' : 'Collapse All';
 }
 
+// ---- Module allocation ----
+let _resources = null;
+let _modAlloc  = {};
+let _currentAllocTask = null;
+
+function buildModAlloc(d) {
+  _modAlloc = {};
+  [...(d.hr?.modules || []), ...(d.tender?.modules || [])].forEach(m => {
+    _modAlloc[m.taskName] = { emails: m.assigneeEmails || [], names: m.assignments || [] };
+  });
+}
+
+function initials(name) {
+  const parts = name.trim().split(/\s+/);
+  return parts.length >= 2
+    ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+    : name.slice(0, 2).toUpperCase();
+}
+
+function assignTriggerHtml(mod, key) {
+  const alloc = _modAlloc[mod.taskName] || { emails: [], names: [] };
+  const names = alloc.names;
+  if (!names.length) {
+    return `<button class="g-assign-trigger unassigned" data-alloc="${esc(mod.taskName)}" data-mod-name="${esc(mod.name)}" onclick="event.stopPropagation();openAllocPanel(this)">+ Assign</button>`;
+  }
+  const shown = names.slice(0, 2).map(initials).join(' · ');
+  const extra = names.length > 2 ? ` +${names.length - 2}` : '';
+  return `<button class="g-assign-trigger assigned" data-alloc="${esc(mod.taskName)}" data-mod-name="${esc(mod.name)}" onclick="event.stopPropagation();openAllocPanel(this)" title="${esc(names.join(', '))}">${esc(shown + extra)}</button>`;
+}
+
+let _resourcesError = null;
+
+async function loadResources() {
+  if (_resources !== null) return _resources;
+  _resourcesError = null;
+  try {
+    const res = await fetch('/.netlify/functions/get-project-resources', { credentials: 'same-origin' });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
+    _resources = json.resources || [];
+  } catch (err) {
+    console.error('[loadResources]', err.message);
+    _resourcesError = err.message;
+    _resources = [];
+  }
+  return _resources;
+}
+
+async function openAllocPanel(btn) {
+  const taskName = btn.dataset.alloc;
+  const modName  = btn.dataset.modName;
+  _currentAllocTask = { taskName, modName };
+
+  const panel = document.getElementById('allocPanel');
+  panel.innerHTML = '<div class="alloc-empty">Loading resources…</div>';
+
+  const rect = btn.getBoundingClientRect();
+  const panW = 300;
+  let left = rect.left;
+  if (left + panW > window.innerWidth - 8) left = window.innerWidth - panW - 8;
+  panel.style.cssText = `display:block;top:${rect.bottom + 6}px;left:${left}px;`;
+
+  const resources = await loadResources();
+  const curEmails = (_modAlloc[taskName] || {}).emails || [];
+
+  const listHtml = _resourcesError
+    ? `<div class="alloc-empty" style="color:var(--red);">Could not load resources:<br><span style="font-family:'JetBrains Mono',monospace;font-size:10.5px;">${esc(_resourcesError)}</span></div>`
+    : resources.length
+      ? resources.map(r => `
+          <label class="alloc-item">
+            <input type="checkbox" value="${esc(r.email)}" ${curEmails.includes(r.email) ? 'checked' : ''}>
+            <div style="flex:1;min-width:0;">
+              <div class="alloc-name">${esc(r.name)}</div>
+              ${r.role ? `<div class="alloc-role">${esc(r.role)}</div>` : ''}
+            </div>
+          </label>`).join('')
+      : '<div class="alloc-empty">No active resources found.<br>Add active Resource Allocation records in ERPNext with <code>custom_user_id</code> filled.</div>';
+
+  panel.innerHTML = `
+    <div class="alloc-head">
+      <div class="alloc-head-title" title="${esc(modName)}">${esc(modName)}</div>
+      <button class="alloc-head-close" onclick="closeAllocPanel()">✕</button>
+    </div>
+    <div class="alloc-list">${listHtml}</div>
+    <div class="alloc-foot">
+      <button class="alloc-clear" onclick="document.querySelectorAll('#allocPanel input[type=checkbox]').forEach(c=>c.checked=false)">Clear all</button>
+      <span class="alloc-fb" id="allocFb"></span>
+      <button class="alloc-save" id="allocSaveBtn" onclick="saveAllocation()">Save →</button>
+    </div>`;
+}
+
+function closeAllocPanel() {
+  document.getElementById('allocPanel').style.display = 'none';
+  _currentAllocTask = null;
+}
+
+async function saveAllocation() {
+  if (!_currentAllocTask) return;
+  const { taskName, modName } = _currentAllocTask;
+  const checked = [...document.querySelectorAll('#allocPanel input[type=checkbox]:checked')].map(c => c.value);
+  const btn = document.getElementById('allocSaveBtn');
+  const fb  = document.getElementById('allocFb');
+  btn.disabled = true; btn.textContent = 'Saving…'; fb.textContent = '';
+
+  try {
+    const res = await fetch('/.netlify/functions/assign-module', {
+      method: 'POST', credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ moduleTaskName: taskName, assignees: checked }),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
+
+    const names = checked.map(email => {
+      const r = (_resources || []).find(r => r.email === email);
+      return r ? r.name : email;
+    });
+    _modAlloc[taskName] = { emails: checked, names };
+
+    // Sync in-memory data so re-render shows updated chips
+    ['hr','tender'].forEach(k => {
+      if (!data || !data[k]) return;
+      data[k].modules.forEach(m => {
+        if (m.taskName === taskName) { m.assignments = names; m.assigneeEmails = checked; }
+      });
+    });
+
+    closeAllocPanel();
+    rerender();
+    showLeadToast(checked.length ? `Assigned to ${checked.length} person${checked.length>1?'s':''}` : 'Assignment cleared', 'success');
+  } catch (err) {
+    fb.textContent = err.message;
+    btn.disabled = false; btn.textContent = 'Save →';
+  }
+}
+
+function showLeadToast(msg, type) {
+  const t = document.createElement('div');
+  t.className = `lead-toast${type?' '+type:''}`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2500);
+}
+
+// ---- PM Assignment Modal ----
+let _pmResources = null;
+
+async function openPmModal() {
+  document.getElementById('pmOverlay').style.display = 'flex';
+  document.getElementById('pmFb').textContent = '';
+
+  if (_pmResources === null) {
+    document.getElementById('pmBody').innerHTML = '<div class="pm-empty">Loading resources…</div>';
+    try {
+      const res = await fetch('/.netlify/functions/get-project-resources', { credentials: 'same-origin' });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
+      _pmResources = (json.resources || []).filter(r => r.role === 'Project Manager');
+    } catch (err) {
+      document.getElementById('pmBody').innerHTML = `<div class="pm-empty" style="color:var(--red);">Could not load resources: ${esc(err.message)}</div>`;
+      return;
+    }
+  }
+
+  renderPmModalBody();
+}
+
+function renderPmModalBody() {
+  const pms = _pmResources || [];
+
+  function sectionHtml(sectionId, sectionLabel, currentAssignees) {
+    const items = pms.length
+      ? pms.map(r => `
+          <label class="pm-item">
+            <input type="checkbox" name="${esc(sectionId)}" value="${esc(r.email)}" ${currentAssignees.includes(r.email) ? 'checked' : ''}>
+            <div>
+              <div class="pm-name">${esc(r.name)}</div>
+              <div class="pm-email">${esc(r.email)}</div>
+            </div>
+          </label>`).join('')
+      : '<div class="pm-empty">No Project Manager resources found in Resource Allocation.</div>';
+    return `<div><div class="pm-section-label">${esc(sectionLabel)}</div>${items}</div>`;
+  }
+
+  document.getElementById('pmBody').innerHTML =
+    sectionHtml('hr',     data.hr?.label     || 'HR Module',     data.hrAssignees     || []) +
+    sectionHtml('tender', data.tender?.label || 'Tender Module', data.tenderAssignees || []);
+}
+
+function closePmModal() {
+  document.getElementById('pmOverlay').style.display = 'none';
+}
+
+async function savePmAssignments() {
+  const btn = document.getElementById('pmSaveBtn');
+  const fb  = document.getElementById('pmFb');
+  btn.disabled = true; btn.textContent = 'Saving…'; fb.textContent = '';
+
+  const hrChecked     = [...document.querySelectorAll('input[name="hr"]:checked')].map(c => c.value);
+  const tenderChecked = [...document.querySelectorAll('input[name="tender"]:checked')].map(c => c.value);
+
+  async function assignRoot(taskName, assignees, label) {
+    const res = await fetch('/.netlify/functions/assign-module', {
+      method: 'POST', credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ moduleTaskName: taskName, assignees }),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(`${label}: ${json.error || `HTTP ${res.status}`}`);
+    return assignees;
+  }
+
+  try {
+    const [hrResult, tenderResult] = await Promise.all([
+      assignRoot(data.hrRootTask,     hrChecked,     'HR'),
+      assignRoot(data.tenderRootTask, tenderChecked, 'Tender'),
+    ]);
+    data.hrAssignees     = hrResult;
+    data.tenderAssignees = tenderResult;
+    closePmModal();
+    if (viewAsEmail) rerender(); // refresh view-as preview if section visibility changed
+    showLeadToast('PM assignments saved', 'success');
+  } catch (err) {
+    fb.textContent = err.message;
+  } finally {
+    btn.disabled = false; btn.textContent = 'Save →';
+  }
+}
+
+// Close allocation panel on outside click
+document.addEventListener('click', e => {
+  const panel = document.getElementById('allocPanel');
+  if (!panel || panel.style.display === 'none') return;
+  if (!panel.contains(e.target) && !e.target.closest('[data-alloc]')) closeAllocPanel();
+});
+
+// ---- View-as (System Manager only) ----
+let viewAsEmail = null;
+let viewAsName  = null;
+let _viewAsResources = null;
+
+function effectiveData() {
+  if (!data || !viewAsEmail) return data;
+  const hrA = data.hrAssignees     || [];
+  const tA  = data.tenderAssignees || [];
+  // PM sees section if assigned, or if no one is assigned yet (backwards-compat)
+  const showHr     = hrA.length === 0 || hrA.includes(viewAsEmail);
+  const showTender = tA.length  === 0 || tA.includes(viewAsEmail);
+  const allowed = new Set([
+    ...(showHr     ? ['HR']     : []),
+    ...(showTender ? ['Tender'] : []),
+  ]);
+  return {
+    ...data,
+    hr:             showHr     ? data.hr     : null,
+    tender:         showTender ? data.tender : null,
+    weeklyTasks:    (data.weeklyTasks    || []).filter(t => allowed.has(t.section)),
+    weeklyActivity: (data.weeklyActivity || []).filter(r => allowed.has(r.section)),
+  };
+}
+
+function rerender() {
+  if (!data) return;
+  const eData = effectiveData();
+  renderKpis(eData, eData.weeklyActivity || []);
+  buildModAlloc(eData);
+  document.getElementById('ganttContainer').innerHTML = buildGantt(eData);
+  attachGanttHandlers();
+  renderActivity(eData.weeklyActivity || []);
+  renderWeeklyPlan(eData.weeklyTasks || [], eData);
+}
+
+async function initViewAsControl(d) {
+  if (!d.isSystemManager) return;
+  const wrap = document.getElementById('viewAsWrap');
+  if (wrap) wrap.style.display = 'flex';
+
+  if (_viewAsResources === null) {
+    try {
+      const res = await fetch('/.netlify/functions/get-project-resources', { credentials: 'same-origin' });
+      const json = await res.json();
+      _viewAsResources = res.ok ? (json.resources || []) : [];
+    } catch { _viewAsResources = []; }
+  }
+
+  const sel = document.getElementById('viewAsSel');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">— preview as user —</option>' +
+    (_viewAsResources || []).map(r =>
+      `<option value="${esc(r.email)}">${esc(r.name)}${r.role ? ' · ' + r.role : ''}</option>`
+    ).join('');
+
+  sel.addEventListener('change', () => {
+    const email = sel.value;
+    if (!email) {
+      resetViewAs(false);
+    } else {
+      const r = (_viewAsResources || []).find(r => r.email === email);
+      viewAsEmail = email;
+      viewAsName  = r ? r.name : email;
+      updateViewAsBanner();
+      rerender();
+    }
+  });
+}
+
+function updateViewAsBanner() {
+  const banner = document.getElementById('viewAsBanner');
+  const label  = document.getElementById('viewAsNameLabel');
+  if (!banner) return;
+  if (viewAsEmail) {
+    banner.style.display = 'flex';
+    if (label) label.textContent = viewAsName || viewAsEmail;
+  } else {
+    banner.style.display = 'none';
+  }
+}
+
+function resetViewAs(resetSel = true) {
+  viewAsEmail = null;
+  viewAsName  = null;
+  if (resetSel) {
+    const sel = document.getElementById('viewAsSel');
+    if (sel) sel.value = '';
+  }
+  updateViewAsBanner();
+  rerender();
+}
+
 // ---- main ----
 let data = null;
 
@@ -1266,14 +1784,14 @@ function render(d){
   document.getElementById('topbarStamp').textContent =
     'Updated ' + stamp.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
 
-  renderKpis(d, d.weeklyActivity);
+  // Show System-Manager-only controls
+  const managePmsBtn = document.getElementById('managePmsBtn');
+  if (managePmsBtn) {
+    managePmsBtn.style.display = d.isSystemManager ? '' : 'none';
+    managePmsBtn.onclick = openPmModal;
+  }
 
-  const ganttHtml = buildGantt(d);
-  document.getElementById('ganttContainer').innerHTML = ganttHtml;
-  attachGanttHandlers();
-
-  renderActivity(d.weeklyActivity);
-  renderWeeklyPlan(d.weeklyTasks, d);
+  rerender();
   initViewTabs();
 }
 
@@ -1323,6 +1841,7 @@ async function loadData(){
     }
     showDashboard();
     render(live);
+    if (live.isSystemManager) initViewAsControl(live);
   } catch(err){
     console.error('Load failed:', err);
     showDashboard();

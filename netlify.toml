@@ -16,6 +16,11 @@
   to = "/.netlify/functions/get-lead-data"
   status = 200
 
+[[redirects]]
+  from = "/consultant"
+  to = "/consultant.html"
+  status = 200
+
 [[headers]]
   for = "/*"
   [headers.values]
