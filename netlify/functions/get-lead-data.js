@@ -7,12 +7,10 @@
 // Auth is the same per-user session cookie as get-progress-data.js —
 // ERPNext's own role permissions govern what each caller can see.
 
-const ERP_URL = process.env.ERP_URL;
-const HR_ROOT_TASK = process.env.HR_ROOT_TASK || "TASK-2026-01212";
+const ERP_URL          = process.env.ERP_URL;
+const HR_ROOT_TASK     = process.env.HR_ROOT_TASK     || "TASK-2026-01212";
 const TENDER_ROOT_TASK = process.env.TENDER_ROOT_TASK || "TASK-2026-01214";
-// The ERPNext role that gates access to this dashboard.
-// Set LEAD_ROLE in your .env / Netlify env vars to override.
-const LEAD_ROLE = process.env.LEAD_ROLE || "Akhilam Lead";
+const LEAD_ROLE        = process.env.LEAD_ROLE        || "Akhilam Lead";
 
 const TASK_FIELDS = [
   "name", "subject", "status", "parent_task", "type", "is_group",
@@ -270,19 +268,32 @@ async function getLoggedInUser(authHeaders) {
   }
 }
 
-async function getUserRoles(username, authHeaders) {
-  const res = await fetch(
-    `${ERP_URL}/api/resource/User/${encodeURIComponent(username)}`,
-    { headers: authHeaders }
-  );
-  if (!res.ok) {
-    console.error(`[getUserRoles] HTTP ${res.status} for ${username}`);
-    return [];
+// Check if username has a specific role by querying the User list with a
+// Has Role child-table filter. Returns true/false using the caller's own
+// session — no admin credentials needed.
+async function userHasRole(username, role, authHeaders) {
+  const url = new URL(`${ERP_URL}/api/resource/User`);
+  url.searchParams.set("filters", JSON.stringify([
+    ["name", "=", username],
+    ["Has Role", "role", "=", role],
+  ]));
+  url.searchParams.set("fields", JSON.stringify(["name"]));
+  url.searchParams.set("limit_page_length", "1");
+  console.log(`[userHasRole] checking "${role}" for "${username}"`);
+  try {
+    const res = await fetch(url.toString(), { headers: authHeaders });
+    if (!res.ok) {
+      console.error(`[userHasRole] HTTP ${res.status}`);
+      return false;
+    }
+    const json = await res.json();
+    const found = (json.data || []).length > 0;
+    console.log(`[userHasRole] "${username}" has "${role}": ${found}`);
+    return found;
+  } catch (err) {
+    console.error("[userHasRole] failed:", err.message);
+    return false;
   }
-  const json = await res.json();
-  const roles = (json.data?.roles || []).map(r => r.role);
-  console.log(`[getUserRoles] ${username} roles:`, roles);
-  return roles;
 }
 
 // ---------- Netlify handler ----------
@@ -316,10 +327,9 @@ exports.handler = async function (event) {
         body: JSON.stringify({ error: "Not logged in.", stage: "role-check" }),
       };
     }
-    const userRoles = await getUserRoles(username, authHeaders);
-    const allowed = userRoles.includes(LEAD_ROLE);
+    const allowed = await userHasRole(username, LEAD_ROLE, authHeaders);
     if (!allowed) {
-      console.warn(`[handler] access denied for ${username} — missing role "${LEAD_ROLE}", has: ${userRoles.join(", ")}`);
+      console.warn(`[handler] access denied for ${username} — missing role "${LEAD_ROLE}"`);
       return {
         statusCode: 403,
         headers,
@@ -327,7 +337,6 @@ exports.handler = async function (event) {
           error: `Access denied. Your ERPNext account (${username}) does not have the "${LEAD_ROLE}" role.`,
           stage: "role-check",
           requiredRole: LEAD_ROLE,
-          debug: { username, userRoles },
         }),
       };
     }
