@@ -7,11 +7,65 @@
       "skillPath": "skills/agent-browser/SKILL.md",
       "computedHash": "ecc7641aea05f85ca3b11e7759d32aaf52fe05946ab4b63739c7bf78a41237a2"
     },
+    "caveman": {
+      "source": "juliusbrussee/caveman",
+      "sourceType": "github",
+      "skillPath": "skills/caveman/SKILL.md",
+      "computedHash": "d18cdf73a5f5c496d681a43a6846336b110223bdffa6817b8992529c57f1a815"
+    },
+    "frappe-api-development": {
+      "source": "lubusin/agent-skills",
+      "sourceType": "github",
+      "skillPath": "frappe-api-development/SKILL.md",
+      "computedHash": "ea948a08d3bbc627592c5a57024a6750591bb29e04f94965c0281fb516fe9330"
+    },
+    "frappe-app-dev": {
+      "source": "frappe/skills",
+      "sourceType": "github",
+      "skillPath": "skills/frappe-app-dev/SKILL.md",
+      "computedHash": "37aa49399ae6b78cabaf71e799eb9b4780eaaa8494330ef571af012e198acc2a"
+    },
+    "frappe-app-development": {
+      "source": "lubusin/agent-skills",
+      "sourceType": "github",
+      "skillPath": "frappe-app-development/SKILL.md",
+      "computedHash": "8e0f63305112b02fd5b1adfe2e37132098c631aea9475651437f56b44eeb0df5"
+    },
+    "frappe-doctype-development": {
+      "source": "lubusin/agent-skills",
+      "sourceType": "github",
+      "skillPath": "frappe-doctype-development/SKILL.md",
+      "computedHash": "c5e4cb5274d1f7dd62ba1e8d31c2656dfc1ce82fbc9ac6e53577d76702497ed7"
+    },
+    "frappe-frontend-development": {
+      "source": "lubusin/agent-skills",
+      "sourceType": "github",
+      "skillPath": "frappe-frontend-development/SKILL.md",
+      "computedHash": "94a77ab0bf2dda3650d40b5c4c4028e07c6ec2d6fd53a0cd8823aa42aa55357d"
+    },
+    "frappe-testing": {
+      "source": "lubusin/agent-skills",
+      "sourceType": "github",
+      "skillPath": "frappe-testing/SKILL.md",
+      "computedHash": "6dbf839029eafa80c771f1e9aacbe6774ade11f7663e1434f96bfff58580ae88"
+    },
+    "frontend-design": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "skillPath": "skills/frontend-design/SKILL.md",
+      "computedHash": "4eabc66183767153e404b39d1b839b1c37f2d82d86f0a0d7e880a579d8d62336"
+    },
     "grill-me": {
       "source": "mattpocock/skills",
       "sourceType": "github",
       "skillPath": "skills/productivity/grill-me/SKILL.md",
       "computedHash": "f321507f77702a54af1db66549ec1685fc625390d06c57d7949cdcda8eb1b5c7"
+    },
+    "high-end-visual-design": {
+      "source": "leonxlnx/taste-skill",
+      "sourceType": "github",
+      "skillPath": "skills/soft-skill/SKILL.md",
+      "computedHash": "7db385e4c5370e5a7fca9704a1361b056e4504ea6a03924bb86f33a4f00b5c73"
     }
   }
 }

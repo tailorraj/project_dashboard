@@ -213,6 +213,53 @@
   .oi-context{ font-size: 11.5px; color: var(--text-faint); margin-top: 3px; font-family: 'JetBrains Mono', monospace; }
   .empty-state{ padding: 30px 4px; text-align:center; color: var(--text-faint); font-size: 13px; line-height: 1.6; }
 
+  .plan-btn{
+    display:inline-flex; align-items:center; gap:7px;
+    border: 1px solid var(--border); background: var(--card); color: var(--navy);
+    font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600;
+    padding: 6px 13px; border-radius: 8px; cursor: pointer; letter-spacing: 0.03em;
+    transition: box-shadow .15s, background .15s;
+    margin-top: 8px;
+  }
+  .plan-btn:hover{ background: var(--blue-soft); border-color: var(--blue); color: var(--blue); box-shadow: 0 2px 8px rgba(29,78,216,0.08); }
+  .plan-btn::before{ content:"◱"; font-size: 13px; }
+
+  .plan-overlay{ position:fixed; inset:0; background:rgba(15,42,74,0.4); display:none; align-items:center; justify-content:center; z-index:110; padding:24px; }
+  .plan-overlay.open{ display:flex; }
+  .plan-dialog{ background:var(--card); border-radius:14px; width:100%; max-width:900px; max-height:88vh; display:flex; flex-direction:column; box-shadow:0 20px 60px rgba(15,42,74,0.28); overflow:hidden; }
+  .plan-body{ padding:6px 24px 24px; overflow-y:auto; }
+
+  .plan-section-label{
+    font-family:'Manrope', sans-serif; font-weight:700; font-size:14px; color:var(--navy);
+    margin:20px 0 10px; padding-bottom:6px; border-bottom:2px solid var(--blue-soft);
+    display:flex; align-items:center; gap:8px;
+  }
+  .plan-section-label::before{ content:""; width:5px; height:5px; background:var(--blue); border-radius:1px; transform:rotate(45deg); display:inline-block; }
+
+  .plan-table{ width:100%; border-collapse:collapse; font-size:12.5px; }
+  .plan-table th{
+    font-family:'JetBrains Mono', monospace; font-size:10px; letter-spacing:0.05em; text-transform:uppercase;
+    color:var(--text-faint); font-weight:600; padding:7px 10px; text-align:left;
+    border-bottom:1px solid var(--border); background:#FBFCFE;
+  }
+  .plan-table td{ padding:10px 10px; border-bottom:1px solid var(--border-soft); color:var(--text); vertical-align:top; line-height:1.45; }
+  .plan-table tr:last-child td{ border-bottom:none; }
+  .plan-table tr:hover td{ background:#F7FAFD; }
+  .plan-table .cell-mod{ font-weight:500; font-size:13px; color:var(--navy); }
+  .plan-table .cell-mono{ font-family:'JetBrains Mono', monospace; font-size:11.5px; color:var(--text-muted); }
+  .plan-table .cell-muted{ font-size:11.5px; color:var(--text-faint); font-style:italic; }
+
+  .plan-badge{ display:inline-block; font-family:'JetBrains Mono', monospace; font-size:10.5px; font-weight:600; padding:3px 8px; border-radius:20px; white-space:nowrap; }
+  .plan-badge.completed{ background:var(--green-soft); color:var(--green); }
+  .plan-badge.in-progress{ background:var(--blue-soft); color:var(--blue); }
+  .plan-badge.not-started{ background:var(--slate-soft); color:var(--text-faint); }
+
+  .plan-note{
+    margin:10px 0 0; padding:10px 14px; background:var(--amber-soft);
+    border-left:3px solid var(--amber); border-radius:6px;
+    font-size:11.5px; color:var(--amber); line-height:1.5;
+  }
+
   @media (max-width: 900px){ .kpis{ grid-template-columns: repeat(3, 1fr); } }
   @media (max-width: 720px){
     .kpis{ grid-template-columns: repeat(2, 1fr); }
@@ -222,6 +269,8 @@
     .fr-panel-inner{ padding-left: 20px; }
     .fr-row{ grid-template-columns: 80px 1fr; }
     .fr-status, .fr-oi{ display:none; }
+    .plan-table th:nth-child(3), .plan-table td:nth-child(3),
+    .plan-table th:nth-child(4), .plan-table td:nth-child(4){ display:none; }
   }
 </style>
 </head>
@@ -252,7 +301,10 @@
     <div class="meta">
       Prepared by <strong>Akhilam Consulting</strong><br>
       Last updated <strong id="lastUpdated">—</strong>
-      <div><button class="logout-btn" id="logoutBtn" type="button">Sign out</button></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;">
+        <button class="plan-btn" id="planBtn" type="button">PROJECT PLAN</button>
+        <button class="logout-btn" id="logoutBtn" type="button">Sign out</button>
+      </div>
     </div>
   </div>
 
@@ -321,6 +373,19 @@
       <button class="dialog-close" id="dialogClose">✕</button>
     </div>
     <div class="dialog-body" id="dialogBody"></div>
+  </div>
+</div>
+
+<div class="plan-overlay" id="planOverlay">
+  <div class="plan-dialog">
+    <div class="dialog-head">
+      <div>
+        <div class="dialog-title">Project Plan</div>
+        <div class="dialog-sub">BRD Phase · Implementation &amp; Development</div>
+      </div>
+      <button class="dialog-close" id="planClose">✕</button>
+    </div>
+    <div class="plan-body" id="planBody"></div>
   </div>
 </div>
 
@@ -724,6 +789,93 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
     showLogin();
   }
 });
+
+// ── Project Plan Modal ────────────────────────────────────────────────────────
+
+const BRD_ROWS = [
+  { module: 'Tender Management',                                          kickstart: '29-Jan-26', submission: 'Completed',   signoff: '27 May 2026 (Approved by Tender Head)', status: 'Completed',   lead: 'Sourav'  },
+  { module: 'HR Management',                                              kickstart: '3-Apr-26',  submission: 'Completed',   signoff: '27 May 2026 (Approved by HR Head)',     status: 'Completed',   lead: 'Vruiti'  },
+  { module: 'Project Management &amp; Mobile Application (Field Operations)', kickstart: '3-Jul-26',  submission: '20-Jul-26',   signoff: '',                                     status: 'In Progress', lead: 'Devarsh' },
+  { module: 'Procurement',                                                kickstart: '18-Jul-26', submission: 'Not started', signoff: '',                                     status: 'Not started', lead: 'Preyash' },
+  { module: 'Accounting Sales &amp; Purchase',                            kickstart: '18-Jul-26', submission: 'Not started', signoff: '',                                     status: 'Not started', lead: 'Preyash' },
+  { module: 'Asset Management',                                           kickstart: '3-Aug-26',  submission: 'Not started', signoff: '',                                     status: 'Not started', lead: 'Preyash' },
+];
+
+const IMPL_ROWS = [
+  { module: 'Tender Management',                 kickstart: '6-Apr-26',  uat: '13-Jul-26', golive: 'Mid Aug 2026',   status: 'In Development',                                        statusNote: '' },
+  { module: 'HR Management',                     kickstart: '15-Apr-26', uat: '13-Jul-26', golive: 'Early Aug 2026', status: 'In Development',                                        statusNote: 'Pending Leave Policy Configuration' },
+  { module: 'Project Management',                kickstart: '',          uat: '',          golive: '',               status: 'After BRD Sign Off we will share the timelines',         statusNote: '' },
+  { module: 'Procurement',                       kickstart: '',          uat: '',          golive: '',               status: 'After BRD Sign Off we will share the timelines',         statusNote: '' },
+  { module: 'Accounting (Sales &amp; Purchase)', kickstart: '',          uat: '',          golive: '',               status: 'After BRD Sign Off we will share the timelines',         statusNote: '' },
+  { module: 'Asset Management',                  kickstart: '',          uat: '',          golive: '',               status: 'After BRD Sign Off we will share the timelines',         statusNote: '' },
+  { module: 'Mobile Application (Field Operations)', kickstart: '',      uat: '',          golive: '',               status: 'After BRD Sign Off we will share the timelines',         statusNote: '' },
+];
+
+function planStatusBadge(s){
+  if (!s) return '';
+  const cls = s === 'Completed' ? 'completed'
+            : s === 'In Progress' || s.startsWith('In Development') ? 'in-progress'
+            : 'not-started';
+  return `<span class="plan-badge ${cls}">${s}</span>`;
+}
+function planMono(v){ return v ? `<span class="cell-mono">${v}</span>` : '<span class="cell-muted">—</span>'; }
+
+function renderPlanBody(){
+  const brdRows = BRD_ROWS.map(r => `
+    <tr>
+      <td class="cell-mod">${r.module}</td>
+      <td>${planMono(r.kickstart)}</td>
+      <td>${planMono(r.submission)}</td>
+      <td style="font-size:12px;color:var(--text-muted);">${r.signoff || '<span class="cell-muted">—</span>'}</td>
+      <td>${planStatusBadge(r.status)}</td>
+      <td><span class="cell-mono">${r.lead || '—'}</span></td>
+    </tr>`).join('');
+
+  const implRows = IMPL_ROWS.map(r => {
+    const tbd = !r.kickstart;
+    const statusHtml = tbd
+      ? `<span style="font-size:11.5px;color:var(--text-faint);font-style:italic;">${r.status}</span>`
+      : `${planStatusBadge(r.status)}${r.statusNote ? `<div style="font-size:11px;color:var(--text-faint);margin-top:3px;">${r.statusNote}</div>` : ''}`;
+    return `
+    <tr>
+      <td class="cell-mod">${r.module}</td>
+      <td>${planMono(r.kickstart)}</td>
+      <td>${planMono(r.uat)}</td>
+      <td>${planMono(r.golive)}</td>
+      <td>${statusHtml}</td>
+    </tr>`;
+  }).join('');
+
+  return `
+    <div class="plan-section-label">BRD Phase</div>
+    <table class="plan-table">
+      <thead><tr>
+        <th>Module</th><th>BRD Kickstart</th>
+        <th>BRD Submission from RevoSolve Team</th>
+        <th>BRD Sign-off from Pioneer Team</th>
+        <th>Status</th><th>Module Leads</th>
+      </tr></thead>
+      <tbody>${brdRows}</tbody>
+    </table>
+    <div class="plan-note">Note — Our internal timeline of submission of BRD is 7 working days if the requirement gathering is completed.</div>
+
+    <div class="plan-section-label">Implementation &amp; Development Plan</div>
+    <table class="plan-table">
+      <thead><tr>
+        <th>Module</th><th>Development Kickstart</th><th>UAT</th><th>Go-Live</th><th>Current Status</th>
+      </tr></thead>
+      <tbody>${implRows}</tbody>
+    </table>`;
+}
+
+const planOverlay = document.getElementById('planOverlay');
+document.getElementById('planBtn').addEventListener('click', () => {
+  document.getElementById('planBody').innerHTML = renderPlanBody();
+  planOverlay.classList.add('open');
+});
+document.getElementById('planClose').addEventListener('click', () => planOverlay.classList.remove('open'));
+planOverlay.addEventListener('click', (e) => { if (e.target === planOverlay) planOverlay.classList.remove('open'); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') planOverlay.classList.remove('open'); });
 
 loadDashboard();
 </script>

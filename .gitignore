@@ -4,3 +4,5 @@ node_modules/
 .DS_Store
 image.png
 .claude/settings.local.json
+.claude/skills/
+.agents/skills/
