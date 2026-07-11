@@ -16,6 +16,7 @@ const TENDER_ROOT_TASK = process.env.TENDER_ROOT_TASK || "TASK-2026-01214";
 const TASK_FIELDS = [
   "name", "subject", "status", "parent_task", "type", "is_group",
   "lft", "rgt", "exp_start_date", "exp_end_date", "modified", "description",
+  "is_milestone",
 ];
 
 function parseCookies(header) {
@@ -179,7 +180,7 @@ function buildSubmodule(rootDoc, allTasks) {
     (byParent[t.parent_task] = byParent[t.parent_task] || []).push(t);
   });
 
-  const moduleTasks = (byParent[rootDoc.name] || []).filter((t) => t.is_group);
+  const moduleTasks = (byParent[rootDoc.name] || []).filter((t) => t.is_group && t.is_milestone == 1);
 
   const modules = moduleTasks.map((mod) => {
     const children = byParent[mod.name] || [];
@@ -234,21 +235,18 @@ function shapeOi(t) {
   };
 }
 
-function collectOverdue(allTasks) {
-  const today = new Date().toISOString().slice(0, 10);
-  return allTasks
-    .filter(
-      (t) =>
-        t.exp_end_date &&
-        t.exp_end_date < today &&
-        !["Completed", "Cancelled"].includes(t.status)
-    )
-    .map((t) => ({
-      id: t.name,
-      title: t.subject,
-      status: t.status,
-      dueDate: t.exp_end_date,
-    }));
+function collectOverdueSets(allTasks) {
+  const frs = allTasks.filter((t) => t.type === "Functional Requirement");
+
+  const overdueTasks = frs
+    .filter((t) => t.status === "Overdue")
+    .map((t) => ({ id: t.name, title: t.subject, status: t.status, dueDate: t.exp_end_date }));
+
+  const reviewOverdueTasks = frs
+    .filter((t) => t.status === "Review Overdue")
+    .map((t) => ({ id: t.name, title: t.subject, status: t.status, dueDate: t.exp_end_date }));
+
+  return { overdueTasks, reviewOverdueTasks };
 }
 
 // ---------- Netlify handler ----------
@@ -317,7 +315,7 @@ exports.handler = async function (event) {
     console.log("[handler] active tasks resolved", { count: activeTasks.length });
 
     stage = "collect overdue";
-    const overdueTasks = collectOverdue(allTasks);
+    const { overdueTasks, reviewOverdueTasks } = collectOverdueSets(allTasks);
 
     stage = "build payload";
     const payload = {
@@ -325,6 +323,7 @@ exports.handler = async function (event) {
       tender: buildSubmodule(tenderRoot, tenderTasks),
       activeTasks,
       overdueTasks,
+      reviewOverdueTasks,
       generatedAt: new Date().toISOString(),
     };
 

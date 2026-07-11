@@ -76,20 +76,40 @@
   .login-submit:hover{ filter: brightness(1.05); }
   .login-submit:disabled{ opacity: .6; cursor: default; }
 
-  .kpis{ display:grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 28px; }
-  .kpi{ background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 16px; position: relative; overflow: hidden; }
-  .kpi::before{ content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background: var(--blue); }
+  .kpis{ display:grid; grid-template-columns: repeat(8, 1fr); gap: 12px; margin-bottom: 28px; }
+  .kpi{
+    background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+    padding: 16px 16px 14px; position: relative; overflow: hidden;
+    transition: transform .2s ease, border-color .2s ease;
+  }
+  /* Full-width top stripe — reads as a status band, not a side decoration */
+  .kpi::before{ content:""; position:absolute; left:0; top:0; right:0; height:3px; background: var(--blue); border-radius: 14px 14px 0 0; }
   .kpi.alt::before{ background: var(--teal); }
   .kpi.warn::before{ background: var(--amber); }
   .kpi.danger::before{ background: var(--red); }
   .kpi.success::before{ background: var(--green); }
-  .kpi.clickable{ cursor: pointer; transition: box-shadow .15s ease, transform .15s ease; }
-  .kpi.clickable:hover{ box-shadow: 0 4px 14px rgba(15,42,74,0.08); transform: translateY(-1px); }
-  .kpi-label{ font-size: 10.8px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-faint); font-weight: 600; margin-bottom: 9px; }
-  .kpi-value{ font-family:'Manrope', sans-serif; font-size: 26px; font-weight: 800; color: var(--navy); line-height: 1; display:flex; align-items:baseline; gap: 6px; }
-  .kpi-value span{ font-family:'JetBrains Mono', monospace; font-size: 12px; font-weight: 500; color: var(--text-faint); }
-  .kpi-foot{ margin-top: 7px; font-size: 11.5px; color: var(--text-muted); }
-  .kpi-link{ margin-top: 7px; font-size: 11px; color: var(--blue); font-weight: 600; display:flex; align-items:center; gap:3px; }
+  /* Accent-matched hover glow: each card responds in its own color */
+  .kpi.clickable{ cursor: pointer; }
+  .kpi.clickable:hover{ transform: translateY(-2px); border-color: rgba(29,78,216,0.35); }
+  .kpi.alt.clickable:hover{ border-color: rgba(8,145,178,0.38); }
+  .kpi.warn.clickable:hover{ border-color: rgba(180,83,9,0.35); }
+  .kpi.danger.clickable:hover{ border-color: rgba(185,28,28,0.35); }
+  /* Label with accent dot — threads the stripe color through the label row */
+  .kpi-label{ display:flex; align-items:center; gap:6px; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-faint); font-weight: 600; margin-bottom: 10px; }
+  .kpi-label::before{ content:""; width:5px; height:5px; border-radius:50%; background: var(--blue); flex-shrink:0; }
+  .kpi.alt .kpi-label::before{ background: var(--teal); }
+  .kpi.warn .kpi-label::before{ background: var(--amber); }
+  .kpi.danger .kpi-label::before{ background: var(--red); }
+  .kpi.success .kpi-label::before{ background: var(--green); }
+  .kpi-value{ font-family:'Manrope', sans-serif; font-size: 28px; font-weight: 800; color: var(--navy); line-height: 1; display:flex; align-items:baseline; gap: 5px; }
+  .kpi-value span{ font-family:'JetBrains Mono', monospace; font-size: 11px; font-weight: 500; color: var(--text-faint); }
+  .kpi-foot{ margin-top: 8px; font-size: 11.5px; color: var(--text-muted); }
+  /* Link picks up the card's accent color on hover */
+  .kpi-link{ margin-top: 8px; font-size: 10.5px; color: var(--text-faint); font-weight: 600; display:flex; align-items:center; gap:3px; letter-spacing: 0.04em; transition: color .15s; }
+  .kpi.clickable:hover .kpi-link{ color: var(--blue); }
+  .kpi.alt.clickable:hover .kpi-link{ color: var(--teal); }
+  .kpi.warn.clickable:hover .kpi-link{ color: var(--amber); }
+  .kpi.danger.clickable:hover .kpi-link{ color: var(--red); }
 
   .tabs{ display:flex; gap: 6px; margin-bottom: 22px; border-bottom: 1px solid var(--border); }
   .tab{ font-family:'JetBrains Mono', monospace; font-size: 12.5px; padding: 10px 4px; margin-right: 22px; color: var(--text-faint); cursor: pointer; border-bottom: 2px solid transparent; letter-spacing: 0.02em; user-select: none; }
@@ -154,6 +174,7 @@
   .badge.in-progress{ background: var(--blue-soft); color: var(--blue); }
   .badge.on-track{ background: var(--green-soft); color: var(--green); }
   .badge.attention{ background: var(--amber-soft); color: var(--amber); }
+  .badge.overdue{ background: var(--red-soft); color: var(--red); }
   .badge.oi{ background: var(--red-soft); color: var(--red); cursor: pointer; font-family:'JetBrains Mono', monospace; }
   .badge.oi:hover{ filter: brightness(0.95); }
   .badge.oi-mini{ background: var(--red-soft); color: var(--red); cursor:pointer; font-size:10px; padding:2px 6px; }
@@ -260,6 +281,46 @@
     font-size:11.5px; color:var(--amber); line-height:1.5;
   }
 
+  .fr-review-actions {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    padding: 6px 10px 10px; margin: 0 0 2px;
+    border-top: 1px dashed rgba(180,83,9,0.18);
+    background: rgba(253,242,227,0.45);
+  }
+  .review-action-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 600;
+    color: var(--amber); letter-spacing: 0.07em; text-transform: uppercase;
+  }
+  .review-btn {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600;
+    padding: 4px 10px; border-radius: 6px; border: 1px solid transparent;
+    cursor: pointer; letter-spacing: 0.03em; transition: filter .15s, opacity .15s;
+  }
+  .review-btn:disabled { opacity: .5; cursor: default; }
+  .review-btn.complete-btn { background: var(--green-soft); color: var(--green); border-color: rgba(21,128,61,0.2); }
+  .review-btn.complete-btn:hover:not(:disabled) { filter: brightness(0.92); }
+  .review-btn.rework-btn { background: var(--amber-soft); color: var(--amber); border-color: rgba(180,83,9,0.2); }
+  .review-btn.rework-btn:hover:not(:disabled) { filter: brightness(0.92); }
+  .review-feedback { font-size: 11px; }
+  .review-feedback.error { color: var(--red); }
+  .rework-input-area { display: flex; width: 100%; gap: 8px; align-items: flex-end; padding: 4px 0 0; }
+  .rework-input-area.hidden { display: none; }
+  .rework-note-input {
+    flex: 1; font-family: 'Inter', sans-serif; font-size: 12.5px; line-height: 1.4;
+    border: 1px solid var(--border); border-radius: 6px; padding: 7px 10px;
+    resize: vertical; min-height: 52px; color: var(--text); background: var(--card);
+  }
+  .rework-note-input:focus { outline: none; border-color: var(--amber); }
+  .rework-note-input::placeholder { color: var(--text-faint); }
+  .rework-submit-btn {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600;
+    padding: 7px 12px; border-radius: 6px; border: 1px solid rgba(180,83,9,0.2);
+    background: var(--amber-soft); color: var(--amber); cursor: pointer; white-space: nowrap; align-self: flex-end;
+  }
+  .rework-submit-btn:hover:not(:disabled) { filter: brightness(0.92); }
+  .rework-submit-btn:disabled { opacity: .5; cursor: default; }
+
+  @media (max-width: 1280px){ .kpis{ grid-template-columns: repeat(4, 1fr); } }
   @media (max-width: 900px){ .kpis{ grid-template-columns: repeat(3, 1fr); } }
   @media (max-width: 720px){
     .kpis{ grid-template-columns: repeat(2, 1fr); }
@@ -335,8 +396,18 @@
       <div class="kpi-link">VIEW LIST →</div>
     </div>
     <div class="kpi danger clickable" id="kpiOverdueCard">
-      <div class="kpi-label">Overdue Open Tasks</div>
-      <div class="kpi-value" id="kpiOverdue">0<span>tasks</span></div>
+      <div class="kpi-label">Dev Overdue</div>
+      <div class="kpi-value" id="kpiOverdue">0<span>FRs</span></div>
+      <div class="kpi-link">VIEW LIST →</div>
+    </div>
+    <div class="kpi warn clickable" id="kpiReviewOverdueCard">
+      <div class="kpi-label">Review Overdue</div>
+      <div class="kpi-value" id="kpiReviewOverdue">0<span>FRs</span></div>
+      <div class="kpi-link">VIEW LIST →</div>
+    </div>
+    <div class="kpi warn clickable" id="kpiPendingReviewCard">
+      <div class="kpi-label">Pending Review</div>
+      <div class="kpi-value" id="kpiPendingReview">0<span>FRs</span></div>
       <div class="kpi-link">VIEW LIST →</div>
     </div>
   </div>
@@ -402,7 +473,7 @@ function frStats(m){
 function frBreakdown(m){
   const total = m.frs.length;
   const done = m.frs.filter(f => f.status === 'Completed').length;
-  const inProgress = m.frs.filter(f => ['Working', 'Pending Review', 'Rework'].includes(f.status)).length;
+  const inProgress = m.frs.filter(f => ['Working', 'Pending Review', 'Rework', 'Review Overdue'].includes(f.status)).length;
   const open = total - done - inProgress;
   return { total, done, inProgress, open, pct: total ? Math.round(done/total*100) : 0 };
 }
@@ -445,7 +516,8 @@ function frStatusBadge(status){
   if (status === 'Working') return '<span class="badge in-progress">WORKING</span>';
   if (status === 'Pending Review') return '<span class="badge attention">PENDING REVIEW</span>';
   if (status === 'Rework') return '<span class="badge attention">REWORK</span>';
-  if (status === 'Overdue') return '<span class="badge attention">OVERDUE</span>';
+  if (status === 'Overdue') return '<span class="badge overdue">DEV OVERDUE</span>';
+  if (status === 'Review Overdue') return '<span class="badge attention">REVIEW OVERDUE</span>';
   return '<span class="badge not-started">OPEN</span>';
 }
 
@@ -459,13 +531,28 @@ function renderFrPanel(key, mi, m){
       <span class="badge oi-mini" data-oi-scope="${key}:${mi}:module">${m.moduleOi.length} OI</span>
     </div>` : '';
 
-  const frRows = m.frs.map((f, fi) => `
-    <div class="fr-row">
-      <div class="fr-id">${f.id}</div>
-      <div class="fr-title">${f.title}<span class="fr-desc-icon" data-fr-desc="${key}:${mi}:${fi}" title="View description">ⓘ</span></div>
-      <div class="fr-status">${frStatusBadge(f.status)}</div>
-      <div class="fr-oi">${f.oi.length ? `<span class="badge oi-mini" data-oi-scope="${key}:${mi}:fr:${fi}">${f.oi.length} OI</span>` : ''}</div>
-    </div>`).join('');
+  const frRows = m.frs.map((f, fi) => {
+    const reviewActions = f.status === 'Pending Review' ? `
+    <div class="fr-review-actions" id="fr-actions-${key}-${mi}-${fi}">
+      <span class="review-action-label">Client Review:</span>
+      <button class="review-btn complete-btn" data-review="${key}:${mi}:${fi}:complete">✓ Mark Complete</button>
+      <button class="review-btn rework-btn" data-review="${key}:${mi}:${fi}:rework">↩ Needs Rework</button>
+      <span class="review-feedback" id="review-feedback-${key}-${mi}-${fi}"></span>
+      <div class="rework-input-area hidden" id="rework-area-${key}-${mi}-${fi}">
+        <textarea class="rework-note-input" placeholder="Describe what needs to be corrected…" rows="2"></textarea>
+        <button class="rework-submit-btn" data-rework-submit="${key}:${mi}:${fi}">Submit</button>
+      </div>
+    </div>` : '';
+    return `
+    <div class="fr-entry">
+      <div class="fr-row">
+        <div class="fr-id">${f.id}</div>
+        <div class="fr-title">${f.title}<span class="fr-desc-icon" data-fr-desc="${key}:${mi}:${fi}" title="View description">ⓘ</span></div>
+        <div class="fr-status" id="fr-status-${key}-${mi}-${fi}">${frStatusBadge(f.status)}</div>
+        <div class="fr-oi">${f.oi.length ? `<span class="badge oi-mini" data-oi-scope="${key}:${mi}:fr:${fi}">${f.oi.length} OI</span>` : ''}</div>
+      </div>${reviewActions}
+    </div>`;
+  }).join('');
 
   return `<div class="fr-panel-inner">${moduleOiHtml}${frRows || '<div class="fr-empty">No FRs scoped yet.</div>'}</div>`;
 }
@@ -539,9 +626,11 @@ function render(){
   const totalFr = allMods.reduce((a,m)=>a+m.frs.length,0);
   const doneFr = allMods.reduce((a,m)=>a+frStats(m).done,0);
   const inProgressFrs = allMods.flatMap(m => m.frs.map(f => ({ ...f, _module: m.name }))).filter(f => ['Working', 'Pending Review', 'Rework'].includes(f.status));
+  const pendingReviewFrs = allMods.flatMap(m => m.frs.map(f => ({ ...f, _module: m.name }))).filter(f => f.status === 'Pending Review');
   const openFrs = allMods.flatMap(m => m.frs.map(f => ({ ...f, _module: m.name }))).filter(f => ['Open', 'Overdue'].includes(f.status));
   const activeCount = (data.activeTasks || []).length;
   const overdueCount = (data.overdueTasks || []).length;
+  const reviewOverdueCount = (data.reviewOverdueTasks || []).length;
   const totalOi = allMods.reduce((a,m)=>a+moduleOiTotal(m),0);
   const hrCount = data.hr.modules.length;
   const tenderCount = data.tender.modules.length;
@@ -555,7 +644,9 @@ function render(){
   document.getElementById('kpiOi').innerHTML = `${totalOi}<span>pending</span>`;
   document.getElementById('kpiInProgress').innerHTML = `${inProgressFrs.length}<span>FRs</span>`;
   document.getElementById('kpiActive').innerHTML = `${activeCount}<span>tasks</span>`;
-  document.getElementById('kpiOverdue').innerHTML = `${overdueCount}<span>tasks</span>`;
+  document.getElementById('kpiOverdue').innerHTML = `${overdueCount}<span>FRs</span>`;
+  document.getElementById('kpiReviewOverdue').innerHTML = `${reviewOverdueCount}<span>FRs</span>`;
+  document.getElementById('kpiPendingReview').innerHTML = `${pendingReviewFrs.length}<span>FRs</span>`;
 
   document.querySelectorAll('.tab')[0].querySelector('.tab-count').textContent = `(${hrCount + tenderCount})`;
   document.querySelectorAll('.tab')[1].querySelector('.tab-count').textContent = `(${hrCount})`;
@@ -614,6 +705,21 @@ document.getElementById('dialogClose').addEventListener('click', closeDialog);
 overlay.addEventListener('click', (e) => { if (e.target === overlay) closeDialog(); });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDialog(); });
 
+function getOpenGroups(){
+  const open = new Set();
+  document.querySelectorAll('.module-group.open').forEach(g => open.add(g.dataset.groupToggle));
+  return open;
+}
+function restoreOpenGroups(open){
+  document.querySelectorAll('.module-group').forEach(g => {
+    if (open.has(g.dataset.groupToggle)){
+      g.classList.add('open');
+      const panel = g.querySelector('.fr-panel');
+      if (panel) panel.style.maxHeight = panel.scrollHeight + 'px';
+    }
+  });
+}
+
 function attachHandlers(){
   document.querySelectorAll('[data-row-toggle]').forEach(row => {
     row.addEventListener('click', () => {
@@ -646,6 +752,78 @@ function attachHandlers(){
         const fi = parts[3];
         const f = m.frs[fi];
         openDialog(`Open Items — ${f.id}`, `${f.title}`, f.oi);
+      }
+    });
+  });
+
+  async function submitReviewAction(key, mi, fi, newStatus, note){
+    const fr = data[key].modules[mi].frs[fi];
+    const res = await fetch('/.netlify/functions/task-update', {
+      method: 'POST', credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ taskName: fr.taskName, fields: { status: newStatus } }),
+    });
+    const body = await res.json();
+    if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`);
+    if (note && note.trim()){
+      await fetch('/.netlify/functions/task-comments', {
+        method: 'POST', credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ taskName: fr.taskName, content: `Rework reason: ${note.trim()}` }),
+      });
+    }
+  }
+
+  document.querySelectorAll('[data-review]').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const [key, mi, fi, action] = btn.dataset.review.split(':');
+      if (action === 'rework'){
+        const area = document.getElementById(`rework-area-${key}-${mi}-${fi}`);
+        if (area) area.classList.toggle('hidden');
+        return;
+      }
+      const actionsEl = document.getElementById(`fr-actions-${key}-${mi}-${fi}`);
+      const allBtns = actionsEl ? actionsEl.querySelectorAll('button') : [];
+      allBtns.forEach(b => b.disabled = true);
+      const orig = btn.textContent;
+      btn.textContent = 'Saving…';
+      try {
+        await submitReviewAction(key, mi, fi, 'Completed', null);
+        data[key].modules[mi].frs[fi].status = 'Completed';
+        const open = getOpenGroups();
+        render();
+        restoreOpenGroups(open);
+      } catch (err) {
+        allBtns.forEach(b => b.disabled = false);
+        btn.textContent = orig;
+        const fb = document.getElementById(`review-feedback-${key}-${mi}-${fi}`);
+        if (fb){ fb.textContent = err.message; fb.className = 'review-feedback error'; }
+      }
+    });
+  });
+
+  document.querySelectorAll('[data-rework-submit]').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const [key, mi, fi] = btn.dataset.reworkSubmit.split(':');
+      const area = document.getElementById(`rework-area-${key}-${mi}-${fi}`);
+      const note = area ? area.querySelector('.rework-note-input').value : '';
+      const actionsEl = document.getElementById(`fr-actions-${key}-${mi}-${fi}`);
+      const allBtns = actionsEl ? actionsEl.querySelectorAll('button') : [];
+      allBtns.forEach(b => b.disabled = true);
+      btn.textContent = 'Saving…';
+      try {
+        await submitReviewAction(key, mi, fi, 'Rework', note);
+        data[key].modules[mi].frs[fi].status = 'Rework';
+        const open = getOpenGroups();
+        render();
+        restoreOpenGroups(open);
+      } catch (err) {
+        allBtns.forEach(b => b.disabled = false);
+        btn.textContent = 'Submit';
+        const fb = document.getElementById(`review-feedback-${key}-${mi}-${fi}`);
+        if (fb){ fb.textContent = err.message; fb.className = 'review-feedback error'; }
       }
     });
   });
@@ -706,7 +884,29 @@ document.getElementById('kpiActiveCard').addEventListener('click', () => {
 document.getElementById('kpiOverdueCard').addEventListener('click', () => {
   if (!data) return;
   const items = (data.overdueTasks || []).map(t => ({ id: t.id, owner: `Due ${t.dueDate}`, desc: t.title, type: 'overdue' }));
-  openDialog('Overdue Open Tasks', 'Past expected end date, not yet Completed/Cancelled', items);
+  openDialog('Dev Overdue', 'FRs past deadline — not yet sent for client review', items);
+});
+
+document.getElementById('kpiReviewOverdueCard').addEventListener('click', () => {
+  if (!data) return;
+  const items = (data.reviewOverdueTasks || []).map(t => ({ id: t.id, owner: `Due ${t.dueDate}`, desc: t.title, type: 'overdue' }));
+  openDialog('Review Overdue', 'FRs sent for review — client UAT date has passed', items);
+});
+
+document.getElementById('kpiPendingReviewCard').addEventListener('click', () => {
+  if (!data) return;
+  const sections = [
+    { key: 'hr', label: data.hr.label },
+    { key: 'tender', label: data.tender.label },
+  ];
+  const items = sections.flatMap(({ key, label }) =>
+    data[key].modules.flatMap(m =>
+      m.frs
+        .filter(f => f.status === 'Pending Review')
+        .map(f => ({ id: f.id, owner: 'Pending Review', desc: f.title, context: `${label} · ${m.name}`, type: 'overdue' }))
+    )
+  );
+  openDialog('Pending Review', `${items.length} FR${items.length !== 1 ? 's' : ''} awaiting client review`, items);
 });
 
 function showLoadError(message){
