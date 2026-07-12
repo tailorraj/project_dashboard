@@ -478,7 +478,8 @@ function frBreakdown(m){
   return { total, done, inProgress, open, pct: total ? Math.round(done/total*100) : 0 };
 }
 
-function moduleOiTotal(m){ return m.moduleOi.length + m.frs.reduce((a,f)=>a+f.oi.length,0); }
+function pendingOi(oiList){ return oiList.filter(oi => oi.status !== 'Completed'); }
+function moduleOiTotal(m){ return pendingOi(m.moduleOi).length + m.frs.reduce((a,f)=>a+pendingOi(f.oi).length,0); }
 function fmtDate(d){ return d ? d : '—'; }
 
 // Segmented bar: green = done, blue (semi) = in progress, grey track = open/not started.
@@ -549,7 +550,7 @@ function renderFrPanel(key, mi, m){
         <div class="fr-id">${f.id}</div>
         <div class="fr-title">${f.title}<span class="fr-desc-icon" data-fr-desc="${key}:${mi}:${fi}" title="View description">ⓘ</span></div>
         <div class="fr-status" id="fr-status-${key}-${mi}-${fi}">${frStatusBadge(f.status)}</div>
-        <div class="fr-oi">${f.oi.length ? `<span class="badge oi-mini" data-oi-scope="${key}:${mi}:fr:${fi}">${f.oi.length} OI</span>` : ''}</div>
+        <div class="fr-oi">${pendingOi(f.oi).length ? `<span class="badge oi-mini" data-oi-scope="${key}:${mi}:fr:${fi}">${pendingOi(f.oi).length} OI</span>` : ''}</div>
       </div>${reviewActions}
     </div>`;
   }).join('');
@@ -735,7 +736,7 @@ function attachHandlers(){
       e.stopPropagation();
       const [key, idx] = el.dataset.oiModule.split(':');
       const m = data[key].modules[idx];
-      const all = [...m.moduleOi, ...m.frs.flatMap(f => f.oi)];
+      const all = [...m.moduleOi, ...m.frs.flatMap(f => f.oi)].map(oi => oi.status === 'Completed' ? { ...oi, type: 'done' } : oi);
       openDialog(`Open Items — ${m.name}`, `${data[key].label}`, all);
     });
   });
@@ -747,11 +748,13 @@ function attachHandlers(){
       const key = parts[0], mi = parts[1], scope = parts[2];
       const m = data[key].modules[mi];
       if (scope === 'module'){
-        openDialog(`Module-level Open Items — ${m.name}`, `${data[key].label}`, m.moduleOi);
+        const items = m.moduleOi.map(oi => oi.status === 'Completed' ? { ...oi, type: 'done' } : oi);
+        openDialog(`Module-level Open Items — ${m.name}`, `${data[key].label}`, items);
       } else {
         const fi = parts[3];
         const f = m.frs[fi];
-        openDialog(`Open Items — ${f.id}`, `${f.title}`, f.oi);
+        const items = f.oi.map(oi => oi.status === 'Completed' ? { ...oi, type: 'done' } : oi);
+        openDialog(`Open Items — ${f.id}`, `${f.title}`, items);
       }
     });
   });
@@ -845,7 +848,7 @@ function attachHandlers(){
 
 document.getElementById('kpiOiCard').addEventListener('click', () => {
   if (!data) return;
-  const all = [...data.hr.modules, ...data.tender.modules].flatMap(m => [...m.moduleOi, ...m.frs.flatMap(f=>f.oi)]);
+  const all = [...data.hr.modules, ...data.tender.modules].flatMap(m => [...m.moduleOi, ...m.frs.flatMap(f=>f.oi)]).filter(oi => oi.status !== 'Completed');
   openDialog('All Open Items', `${all.length} pending across HR & Tender`, all);
 });
 
