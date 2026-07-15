@@ -784,6 +784,8 @@ function attachHandlers(){
       if (action === 'rework'){
         const area = document.getElementById(`rework-area-${key}-${mi}-${fi}`);
         if (area) area.classList.toggle('hidden');
+        const panel = btn.closest('.fr-panel');
+        if (panel) panel.style.maxHeight = panel.scrollHeight + 'px';
         return;
       }
       const actionsEl = document.getElementById(`fr-actions-${key}-${mi}-${fi}`);
