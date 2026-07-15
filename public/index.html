@@ -533,7 +533,7 @@ function renderFrPanel(key, mi, m){
     </div>` : '';
 
   const frRows = m.frs.map((f, fi) => {
-    const reviewActions = f.status === 'Pending Review' ? `
+    const reviewActions = ['Pending Review', 'Review Overdue'].includes(f.status) ? `
     <div class="fr-review-actions" id="fr-actions-${key}-${mi}-${fi}">
       <span class="review-action-label">Client Review:</span>
       <button class="review-btn complete-btn" data-review="${key}:${mi}:${fi}:complete">✓ Mark Complete</button>
