@@ -203,6 +203,7 @@
   .g-bar.fr-rework{ background:var(--red); height:10px; top:13px; opacity:.65; }
   .g-bar.fr-open{ background:var(--slate); height:10px; top:13px; opacity:.4; }
   .g-bar.fr-overdue{ background:var(--red); height:10px; top:13px; }
+  .g-bar.fr-review-overdue{ background:var(--amber); height:10px; top:13px; }
 
   .g-no-dates{
     padding:28px 20px; font-size:13px; color:var(--text-faint);
@@ -614,6 +615,7 @@ const STATUS_ORDER = { Working:0,'Pending Review':1,Rework:2,Overdue:3,Open:4 };
 function chipClass(status){
   if(status==='Working') return 'chip-working';
   if(status==='Pending Review') return 'chip-review';
+  if(status==='Review Overdue') return 'chip-review';
   if(status==='Rework') return 'chip-rework';
   if(status==='Overdue') return 'chip-overdue';
   return 'chip-open';
